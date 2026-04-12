@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+  <title>FileBeam P2P</title>
+
+  <!-- Firebase (только Firestore — бесплатно) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+  <!-- QR Code -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #080c10;
+      --surface: #0e1419;
+      --surface2: #141c24;
+      --border: #1a2535;
+      --accent: #00d4ff;
+      --accent2: #0077ff;
+      --accent-glow: rgba(0,212,255,0.15);
+      --text: #dce8f5;
+      --muted: #4a6070;
+      --success: #00e676;
+      --warning: #ffab40;
+      --error: #ff5252;
+      --r: 14px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 16px 48px;
+    }
+
+    /* Atmospheric background */
+    .bg-orb {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      filter: blur(60px);
+    }
+    .bg-orb-1 {
+      width: 350px; height: 350px;
+      background: radial-gradient(circle, rgba(0,119,255,0.12), transparent 70%);
+      top: -80px; right: -80px;
+    }
+    .bg-orb-2 {
+      width: 280px; height: 280px;
+      background: radial-gradient(circle, rgba(0,212,255,0.08), transparent 70%);
+      bottom: 60px; left: -60px;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 460px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Header ── */
+    .header {
+      padding: 28px 0 20px;
+      text-align: center;
+    }
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.9rem;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(120deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .logo em {
+      -webkit-text-fill-color: var(--text);
+      font-style: normal;
+    }
+    .sub {
+      font-size: 0.62rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+
+    /* ── Label ── */
+    .lbl {
+      font-size: 0.58rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    /* ── Drop zone ── */
+    .drop {
+      border: 1.5px dashed var(--border);
+      border-radius: 10px;
+      padding: 36px 16px;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      transition: border-color .2s, background .2s;
+    }
+    .drop:hover, .drop.over {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+    .drop input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%; height: 100%;
+    }
+    .drop-ico { font-size: 2.2rem; display: block; margin-bottom: 10px; transition: transform .2s; }
+    .drop:hover .drop-ico { transform: translateY(-3px); }
+    .drop-lbl { font-size: 0.82rem; font-weight: 700; display: block; margin-bottom: 3px; }
+    .drop-hint { font-size: 0.65rem; color: var(--muted); }
+
+    /* ── File chip ── */
+    .chip {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+      padding: 12px 14px;
+      background: rgba(0,212,255,0.06);
+      border: 1px solid rgba(0,212,255,0.18);
+      border-radius: 10px;
+    }
+    .chip.show { display: flex; }
+    .chip-ico { font-size: 1.6rem; flex-shrink: 0; }
+    .chip-info { flex: 1; min-width: 0; }
+    .chip-name {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--accent);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .chip-size { font-size: 0.62rem; color: var(--muted); margin-top: 2px; }
+    .chip-rm {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 4px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .chip-rm:hover { color: var(--error); }
+
+    /* ── Buttons ── */
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-primary {
+      background: linear-gradient(120deg, var(--accent), var(--accent2));
+      color: #000;
+      margin-top: 14px;
+    }
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 28px rgba(0,212,255,0.22);
+    }
+    .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      margin-top: 10px;
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-dl {
+      background: var(--success);
+      color: #000;
+      margin-top: 4px;
+    }
+    .btn-dl:hover { box-shadow: 0 6px 20px rgba(0,230,118,0.25); transform: translateY(-1px); }
+    .btn-dl:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* ── Progress ── */
+    .prog-wrap { display: none; margin-top: 14px; }
+    .prog-wrap.show { display: block; }
+    .prog-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.62rem;
+      color: var(--muted);
+      margin-bottom: 7px;
+    }
+    .prog-track {
+      height: 3px;
+      background: var(--border);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .prog-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 99px;
+      width: 0%;
+      transition: width .3s ease;
+    }
+
+    /* ── Status text ── */
+    .status {
+      font-size: 0.65rem;
+      text-align: center;
+      padding: 8px 0 0;
+      min-height: 24px;
+      color: var(--muted);
+    }
+    .status.ok  { color: var(--success); }
+    .status.err { color: var(--error); }
+    .status.warn{ color: var(--warning); }
+
+    /* ── Pulse animation ── */
+    @keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:.45 } }
+    .pulsing { animation: pulse 1.4s infinite; }
+
+    /* ── Divider ── */
+    .div { height: 1px; background: var(--border); margin: 18px 0; }
+
+    /* ── QR box ── */
+    .qr-center { display: flex; justify-content: center; margin-bottom: 16px; }
+    .qr-frame {
+      background: #fff;
+      padding: 12px;
+      border-radius: 10px;
+      box-shadow: 0 0 50px rgba(0,212,255,0.18);
+      display: inline-block;
+    }
+    #qrcode canvas, #qrcode img { display: block; }
+
+    /* ── Link row ── */
+    .link-row { display: flex; gap: 8px; }
+    .link-val {
+      flex: 1;
+      min-width: 0;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 12px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--accent);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .copy-btn {
+      flex-shrink: 0;
+      background: var(--border);
+      border: none;
+      border-radius: 8px;
+      padding: 0 14px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background .2s;
+    }
+    .copy-btn:hover, .copy-btn.ok { background: var(--accent); }
+
+    /* ── Warning banner ── */
+    .banner {
+      display: none;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 0.68rem;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+    .banner.show { display: flex; }
+    .banner-warn {
+      background: rgba(255,171,64,0.08);
+      border: 1px solid rgba(255,171,64,0.25);
+      color: var(--warning);
+    }
+    .banner-info {
+      background: rgba(0,212,255,0.06);
+      border: 1px solid rgba(0,212,255,0.18);
+      color: var(--accent);
+    }
+    .banner-ico { font-size: 1rem; flex-shrink: 0; line-height: 1.5; }
+
+    /* ── Download page ── */
+    .dl-hero {
+      text-align: center;
+      padding: 24px 16px 20px;
+    }
+    .dl-ico { font-size: 3.2rem; margin-bottom: 12px; }
+    .dl-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      word-break: break-word;
+      margin-bottom: 4px;
+    }
+    .dl-size { font-size: 0.65rem; color: var(--muted); }
+
+    /* Connection steps */
+    .steps { margin: 14px 0 0; }
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.7rem;
+    }
+    .step:last-child { border-bottom: none; }
+    .step-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      flex-shrink: 0;
+      transition: background .3s;
+    }
+    .step-dot.active { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+    .step-dot.done   { background: var(--success); }
+    .step-dot.err    { background: var(--error); }
+    .step-lbl { flex: 1; color: var(--muted); }
+    .step-lbl.active { color: var(--text); }
+    .step-lbl.done   { color: var(--success); }
+
+    /* Home link */
+    .home-link {
+      display: block;
+      text-align: center;
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-decoration: none;
+      margin-top: 14px;
+      padding: 6px;
+    }
+    .home-link:hover { color: var(--accent); }
+
+    /* Page toggle */
+    #sender-page, #receiver-page { }
+    .hidden { display: none !important; }
+
+    /* Mode toggle */
+    .mode-toggle {
+      display: flex;
+      gap: 4px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 4px;
+      margin-top: 4px;
+      margin-bottom: 4px;
+    }
+    .mode-btn {
+      flex: 1;
+      padding: 10px 4px;
+      border: none;
+      border-radius: 7px;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'Space Mono', monospace;
+      font-size: 0.57rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s;
+      text-align: center;
+      line-height: 1.4;
+    }
+    .mode-btn .mico  { display: block; font-size: 1.1rem; margin-bottom: 3px; }
+    .mode-btn .mname { display: block; text-transform: uppercase; letter-spacing: 1px; }
+    .mode-btn .mdesc { display: block; font-size: 0.5rem; font-weight: 400; margin-top: 2px; opacity: 0.7; text-transform: none; letter-spacing: 0; }
+    .mode-btn.active { background: var(--surface2); box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+    .mode-btn.active.m-auto { color: var(--accent); }
+    .mode-btn.active.m-turn { color: var(--warning); }
+    .mode-btn.active.m-p2p  { color: var(--success); }
+    .mode-hint { font-size: 0.58rem; color: var(--muted); margin-top: 8px; padding: 8px 10px; background: rgba(255,255,255,0.03); border-radius: 7px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+
+<div class="wrap">
+  <div class="header">
+    <div class="logo">File<em>Beam</em></div>
+    <div class="sub">P2P передача файлов</div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SENDER PAGE                                                   -->
+  <!-- ============================================================ -->
+  <div id="sender-page">
+
+    <!-- File-protocol warning -->
+    <div class="banner banner-warn" id="file-proto-warn">
+      <span class="banner-ico">⚠️</span>
+      <span>Файл открыт локально (file://). Чтобы ссылки работали на других устройствах, загрузи этот файл на хостинг или открой через локальный сервер.</span>
+    </div>
+
+    <!-- Step 1: pick file -->
+    <div class="card" id="card-pick">
+      <div class="lbl">Выберите файл</div>
+
+      <div class="drop" id="dropzone">
+        <input type="file" id="file-input"/>
+        <span class="drop-ico">📦</span>
+        <span class="drop-lbl">Нажмите или перетащите файл</span>
+        <span class="drop-hint">Любой тип · любой размер</span>
+      </div>
+
+      <div class="chip" id="chip">
+        <span class="chip-ico" id="chip-ico">📄</span>
+        <div class="chip-info">
+          <div class="chip-name" id="chip-name">—</div>
+          <div class="chip-size" id="chip-size">—</div>
+        </div>
+        <button class="chip-rm" id="chip-rm" title="Убрать">✕</button>
+      </div>
+
+      <div class="div" style="margin:16px 0 12px"></div>
+      <div class="lbl">Режим соединения</div>
+      <div class="mode-toggle" id="mode-toggle-sender">
+        <button class="mode-btn m-auto active" data-mode="auto">
+          <span class="mico">⚡</span><span class="mname">Авто</span>
+          <span class="mdesc">P2P → TURN при неудаче</span>
+        </button>
+        <button class="mode-btn m-turn" data-mode="turn">
+          <span class="mico">🛡</span><span class="mname">Надёжный</span>
+          <span class="mdesc">Всегда через TURN</span>
+        </button>
+        <button class="mode-btn m-p2p" data-mode="p2p">
+          <span class="mico">🚀</span><span class="mname">Только P2P</span>
+          <span class="mdesc">Быстро, без гарантий</span>
+        </button>
+      </div>
+      <div class="mode-hint" id="mode-hint-sender"></div>
+
+      <button class="btn btn-primary" id="share-btn" disabled>Создать ссылку →</button>
+      <div class="status" id="share-status"></div>
+    </div>
+
+    <!-- Step 2: QR + link (shown after session created) -->
+    <div class="card hidden" id="card-share">
+      <div class="lbl">QR-код для скачивания</div>
+      <div class="qr-center">
+        <div class="qr-frame"><div id="qrcode"></div></div>
+      </div>
+
+      <div class="div"></div>
+
+      <div class="lbl">Ссылка</div>
+      <div class="link-row">
+        <div class="link-val" id="link-val">—</div>
+        <button class="copy-btn" id="copy-btn">📋</button>
+      </div>
+
+      <button class="btn btn-ghost" id="native-share-btn" style="display:none">Поделиться ↗</button>
+
+      <div class="div"></div>
+
+      <!-- Transfer progress (shown when receiver connects) -->
+      <div id="transfer-block">
+        <div class="lbl">Статус передачи</div>
+
+        <div class="banner banner-info show" id="waiting-banner">
+          <span class="banner-ico">📡</span>
+          <span>Ожидание получателя… <strong>Не закрывай вкладку!</strong><br>Пусть получатель откроет ссылку и нажмёт «Скачать».</span>
+        </div>
+
+        <div class="prog-wrap" id="send-prog">
+          <div class="prog-row">
+            <span id="send-prog-lbl" class="pulsing">Отправка…</span>
+            <span id="send-prog-pct">0%</span>
+          </div>
+          <div class="prog-track"><div class="prog-fill" id="send-fill"></div></div>
+        </div>
+
+        <div class="status" id="send-status"></div>
+      </div>
+
+      <button class="btn btn-ghost" id="new-btn" style="margin-top:14px">+ Другой файл</button>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- RECEIVER PAGE                                                 -->
+  <!-- ============================================================ -->
+  <div id="receiver-page" class="hidden">
+    <div class="card">
+      <div class="dl-hero">
+        <div class="dl-ico" id="dl-ico">📦</div>
+        <div class="dl-name" id="dl-name">—</div>
+        <div class="dl-size" id="dl-size"></div>
+      </div>
+
+      <div class="lbl">Режим соединения</div>
+      <div class="mode-toggle" id="mode-toggle-recv">
+        <button class="mode-btn m-auto active" data-mode="auto">
+          <span class="mico">⚡</span><span class="mname">Авто</span>
+          <span class="mdesc">P2P → TURN при неудаче</span>
+        </button>
+        <button class="mode-btn m-turn" data-mode="turn">
+          <span class="mico">🛡</span><span class="mname">Надёжный</span>
+          <span class="mdesc">Всегда через TURN</span>
+        </button>
+        <button class="mode-btn m-p2p" data-mode="p2p">
+          <span class="mico">🚀</span><span class="mname">Только P2P</span>
+          <span class="mdesc">Быстро, без гарантий</span>
+        </button>
+      </div>
+      <div class="mode-hint" id="mode-hint-recv"></div>
+
+      <button class="btn btn-dl" id="dl-btn">⬇ Скачать файл</button>
+      <div class="status" id="dl-status"></div>
+
+      <div class="div"></div>
+
+      <!-- Steps -->
+      <div class="steps" id="steps">
+        <div class="step">
+          <div class="step-dot" id="s1"></div>
+          <span class="step-lbl" id="s1l">Подключение к отправителю</span>
+        </div>
+        <div class="step">
+          <div class="step-dot" id="s2"></div>
+          <span class="step-lbl" id="s2l">Согласование соединения</span>
+        </div>
+        <div class="step">
+          <div class="step-dot" id="s3"></div>
+          <span class="step-lbl" id="s3l">Получение файла</span>
+        </div>
+        <div class="step">
+          <div class="step-dot" id="s4"></div>
+          <span class="step-lbl" id="s4l">Готово</span>
+        </div>
+      </div>
+
+      <div class="prog-wrap" id="recv-prog">
+        <div class="prog-row">
+          <span id="recv-prog-lbl" class="pulsing">Загрузка…</span>
+          <span id="recv-prog-pct">0%</span>
+        </div>
+        <div class="prog-track"><div class="prog-fill" id="recv-fill"></div></div>
+      </div>
+
+      <a href="javascript:void(0)" id="home-link" class="home-link">← Загрузить свой файл</a>
+    </div>
+
+    <div class="banner banner-warn" id="sender-offline-warn" style="margin-top:8px">
+      <span class="banner-ico">⚠️</span>
+      <span>Отправитель должен держать вкладку открытой во время передачи. Если соединение не устанавливается — попроси отправителя обновить страницу.</span>
+    </div>
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+// ════════════════════════════════════════════════════════════
+// Firebase init
+// ════════════════════════════════════════════════════════════
+firebase.initializeApp({
+  apiKey: "AIzaSyDJR4f0YYi21ODCwVQb1uTlLIzOabEy6Ok",
+  authDomain: "qr-file-share-1c13a.firebaseapp.com",
+  projectId: "qr-file-share-1c13a",
+  storageBucket: "qr-file-share-1c13a.firebasestorage.app"
+});
+const db = firebase.firestore();
+
+// ════════════════════════════════════════════════════════════
+// Utils
+// ════════════════════════════════════════════════════════════
+const CHUNK = 65536; // 64 KB chunks
+
+// ── Mode hints
+const MODE_HINTS = {
+  auto: '⚡ Авто: сначала пробует прямое соединение, при неудаче переключается на TURN',
+  turn: '🛡 Надёжный: трафик идёт через TURN-сервер. Работает везде, немного медленнее',
+  p2p:  '🚀 Только P2P: максимальная скорость. Файл не проходит через серверы. Может не работать за NAT/VPN',
+};
+
+let senderMode   = localStorage.getItem('filebeam-mode') || 'auto';
+let receiverMode = localStorage.getItem('filebeam-mode') || 'auto';
+
+function initModeToggle(toggleId, hintId, getMode, setMode) {
+  const wrap = document.getElementById(toggleId);
+  const hint = document.getElementById(hintId);
+  if (!wrap) return;
+  const update = () => {
+    wrap.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === getMode()));
+    if (hint) hint.textContent = MODE_HINTS[getMode()];
+  };
+  update();
+  wrap.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      setMode(btn.dataset.mode);
+      localStorage.setItem('filebeam-mode', btn.dataset.mode);
+      update();
+    });
+  });
+}
+
+const TURN_FALLBACK = [
+  { urls: 'stun:stun.relay.metered.ca:80' },
+  { urls: 'turn:global.relay.metered.ca:80',               username: '3cad44e22831c4169b0dede4', credential: '+HEnFJ75DSfIgakV' },
+  { urls: 'turn:global.relay.metered.ca:80?transport=tcp',  username: '3cad44e22831c4169b0dede4', credential: '+HEnFJ75DSfIgakV' },
+  { urls: 'turn:global.relay.metered.ca:443',               username: '3cad44e22831c4169b0dede4', credential: '+HEnFJ75DSfIgakV' },
+  { urls: 'turns:global.relay.metered.ca:443?transport=tcp',username: '3cad44e22831c4169b0dede4', credential: '+HEnFJ75DSfIgakV' },
+];
+
+async function getICE(mode) {
+  if (mode === 'p2p') {
+    // P2P only — no TURN servers, just STUN
+    return { iceServers: [
+      { urls: 'stun:stun.relay.metered.ca:80' },
+      { urls: 'stun:stun.cloudflare.com:3478' },
+    ]};
+  }
+  // For 'turn' mode — force relay only (skip direct P2P attempts)
+  const extra = mode === 'turn' ? { iceTransportPolicy: 'relay' } : {};
+  try {
+    const res = await fetch("https://malikkiij.metered.live/api/v1/turn/credentials?apiKey=278cb0787d257265a851ff465b3ab1453e52");
+    const iceServers = await res.json();
+    return { iceServers, ...extra };
+  } catch(e) {
+    return { iceServers: TURN_FALLBACK, ...extra };
+  }
+}
+
+function fmt(b) {
+  if (!b) return '0 Б';
+  const u = ['Б','КБ','МБ','ГБ'];
+  const i = Math.floor(Math.log(b) / Math.log(1024));
+  return (b / Math.pow(1024, i)).toFixed(1) + ' ' + u[i];
+}
+
+function emoji(name) {
+  const e = (name.split('.').pop()||'').toLowerCase();
+  return ({
+    pdf:'📕',doc:'📝',docx:'📝',xls:'📊',xlsx:'📊',ppt:'📊',pptx:'📊',
+    zip:'🗜',rar:'🗜','7z':'🗜',tar:'🗜',gz:'🗜',
+    jpg:'🖼',jpeg:'🖼',png:'🖼',gif:'🖼',webp:'🖼',svg:'🖼',heic:'🖼',
+    mp4:'🎬',mov:'🎬',avi:'🎬',mkv:'🎬',
+    mp3:'🎵',wav:'🎵',ogg:'🎵',flac:'🎵',aac:'🎵',
+    apk:'📱',ipa:'📱',
+    txt:'📄',json:'📄',csv:'📄',xml:'📄',
+  })[e] || '📦';
+}
+
+function copyText(t) {
+  return navigator.clipboard ? navigator.clipboard.writeText(t) : new Promise(res => {
+    const ta = Object.assign(document.createElement('textarea'), { value: t });
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta); res();
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// Router
+// ════════════════════════════════════════════════════════════
+const params = new URLSearchParams(location.search);
+const SESSION_ID = params.get('id');
+
+if (SESSION_ID) {
+  document.getElementById('sender-page').classList.add('hidden');
+  document.getElementById('receiver-page').classList.remove('hidden');
+  initReceiver(SESSION_ID);
+} else {
+  initSender();
+}
+
+// ════════════════════════════════════════════════════════════
+// SENDER
+// ════════════════════════════════════════════════════════════
+function initSender() {
+  if (location.protocol === 'file:') {
+    document.getElementById('file-proto-warn').classList.add('show');
+  }
+  initModeToggle('mode-toggle-sender', 'mode-hint-sender', () => senderMode, m => { senderMode = m; });
+
+  let file = null;
+  let pc   = null;
+  let dc   = null;
+  let sessionRef = null;
+  let unsubAnswer = null;
+  let unsubCands  = null;
+
+  const dropzone  = document.getElementById('dropzone');
+  const fileInput = document.getElementById('file-input');
+  const chip      = document.getElementById('chip');
+  const chipIco   = document.getElementById('chip-ico');
+  const chipName  = document.getElementById('chip-name');
+  const chipSize  = document.getElementById('chip-size');
+  const chipRm    = document.getElementById('chip-rm');
+  const shareBtn  = document.getElementById('share-btn');
+  const shareStatus= document.getElementById('share-status');
+  const cardPick  = document.getElementById('card-pick');
+  const cardShare = document.getElementById('card-share');
+  const linkVal   = document.getElementById('link-val');
+  const copyBtn   = document.getElementById('copy-btn');
+  const nativeBtn = document.getElementById('native-share-btn');
+  const waitBanner= document.getElementById('waiting-banner');
+  const sendProg  = document.getElementById('send-prog');
+  const sendFill  = document.getElementById('send-fill');
+  const sendPct   = document.getElementById('send-prog-pct');
+  const sendLbl   = document.getElementById('send-prog-lbl');
+  const sendStatus= document.getElementById('send-status');
+  const newBtn    = document.getElementById('new-btn');
+
+  function setFile(f) {
+    file = f;
+    chipIco.textContent = emoji(f.name);
+    chipName.textContent = f.name;
+    chipSize.textContent = fmt(f.size);
+    chip.classList.add('show');
+    shareBtn.disabled = false;
+    shareStatus.textContent = '';
+  }
+
+  function clearFile() {
+    file = null; fileInput.value = '';
+    chip.classList.remove('show');
+    shareBtn.disabled = true;
+  }
+
+  fileInput.addEventListener('change', () => fileInput.files[0] && setFile(fileInput.files[0]));
+  chipRm.addEventListener('click', clearFile);
+  dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('over'); });
+  dropzone.addEventListener('dragleave', () => dropzone.classList.remove('over'));
+  dropzone.addEventListener('drop', e => {
+    e.preventDefault(); dropzone.classList.remove('over');
+    if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+  });
+
+  newBtn.addEventListener('click', () => {
+    cleanup();
+    clearFile();
+    cardShare.classList.add('hidden');
+    cardPick.style.display = '';
+    shareStatus.textContent = '';
+    document.getElementById('qrcode').innerHTML = '';
+    sendProg.classList.remove('show');
+    sendStatus.textContent = '';
+    waitBanner.classList.add('show');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  function cleanup() {
+    if (unsubAnswer) { unsubAnswer(); unsubAnswer = null; }
+    if (unsubCands)  { unsubCands();  unsubCands  = null; }
+    if (dc) { try { dc.close(); } catch(e){} dc = null; }
+    if (pc) { try { pc.close(); } catch(e){} pc = null; }
+  }
+
+  shareBtn.addEventListener('click', async () => {
+    if (!file) return;
+    shareBtn.disabled = true;
+    shareStatus.className = 'status';
+    shareStatus.textContent = 'Создаём сессию…';
+
+    try {
+      const iceConfig = await getICE(senderMode);
+      pc = new RTCPeerConnection(iceConfig);
+      dc = pc.createDataChannel('file', { ordered: true });
+
+      // ICE candidates → Firestore
+      pc.onicecandidate = e => {
+        if (e.candidate && sessionRef) {
+          sessionRef.collection('sc').add(e.candidate.toJSON()).catch(()=>{});
+        }
+      };
+
+      // Handle receiver messages
+      dc.onmessage = e => {
+        if (typeof e.data === 'string') {
+          const msg = JSON.parse(e.data);
+          if (msg.t === 'ready') startSending();
+        }
+      };
+
+      dc.onerror = err => {
+        sendStatus.className = 'status err';
+        sendStatus.textContent = 'Ошибка канала: ' + err;
+      };
+
+      // Create offer
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      // Store session in Firestore
+      sessionRef = await db.collection('s').add({
+        o: { sdp: offer.sdp, type: offer.type },
+        fn: file.name,
+        fs: file.size,
+        ft: file.type,
+        ts: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      const sid = sessionRef.id;
+      const url = `${location.origin}${location.pathname}?id=${sid}`;
+
+      // Show QR + link
+      cardPick.style.display = 'none';
+      cardShare.classList.remove('hidden');
+      linkVal.textContent = url;
+
+      document.getElementById('qrcode').innerHTML = '';
+      new QRCode(document.getElementById('qrcode'), {
+        text: url, width: 200, height: 200,
+        colorDark: '#000000', colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+
+      // Copy
+      copyBtn.onclick = () => {
+        copyText(url).then(() => {
+          copyBtn.textContent = '✓'; copyBtn.classList.add('ok');
+          setTimeout(() => { copyBtn.textContent = '📋'; copyBtn.classList.remove('ok'); }, 2000);
+        });
+      };
+
+      // Native share
+      if (navigator.share) {
+        nativeBtn.style.display = '';
+        nativeBtn.onclick = () => navigator.share({ title: file.name, url }).catch(()=>{});
+      }
+
+      cardShare.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      // Listen for answer
+      let remoteSet = false;
+      const candBuffer = [];
+
+      async function applyCandidate(c) {
+        try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch(e){}
+      }
+
+      unsubAnswer = sessionRef.onSnapshot(async snap => {
+        const d = snap.data();
+        if (d && d.a && !remoteSet) {
+          remoteSet = true;
+          await pc.setRemoteDescription(d.a);
+          for (const c of candBuffer) await applyCandidate(c);
+          candBuffer.length = 0;
+        }
+      });
+
+      // Listen for receiver ICE candidates
+      unsubCands = sessionRef.collection('rc').onSnapshot(snap => {
+        snap.docChanges().forEach(ch => {
+          if (ch.type === 'added') {
+            const c = ch.doc.data();
+            if (remoteSet) applyCandidate(c);
+            else candBuffer.push(c);
+          }
+        });
+      });
+
+    } catch(err) {
+      shareStatus.className = 'status err';
+      shareStatus.textContent = 'Ошибка: ' + err.message;
+      shareBtn.disabled = false;
+    }
+  });
+
+  // ── Send file via DataChannel ──
+  function startSending() {
+    waitBanner.classList.remove('show');
+    sendProg.classList.add('show');
+    sendStatus.textContent = '';
+
+    dc.send(JSON.stringify({ t: 'meta', name: file.name, size: file.size, mime: file.type }));
+
+    let offset = 0;
+    const reader = new FileReader();
+
+    reader.onload = e => {
+      try {
+        dc.send(e.target.result);
+      } catch(err) {
+        sendStatus.className = 'status err';
+        sendStatus.textContent = 'Ошибка передачи: ' + err.message;
+        return;
+      }
+      offset += e.target.result.byteLength;
+      const pct = Math.min(100, Math.round(offset / file.size * 100));
+      sendFill.style.width = pct + '%';
+      sendPct.textContent  = pct + '%';
+
+      if (offset < file.size) {
+        // Back-pressure: wait if buffer is filling up
+        if (dc.bufferedAmount > CHUNK * 16) {
+          setTimeout(readNext, 50);
+        } else {
+          readNext();
+        }
+      } else {
+        dc.send(JSON.stringify({ t: 'done' }));
+        sendLbl.classList.remove('pulsing');
+        sendLbl.textContent = 'Отправлено';
+        sendStatus.className = 'status ok';
+        sendStatus.textContent = '✓ Файл успешно передан получателю';
+      }
+    };
+
+    reader.onerror = () => {
+      sendStatus.className = 'status err';
+      sendStatus.textContent = 'Ошибка чтения файла';
+    };
+
+    function readNext() {
+      const slice = file.slice(offset, offset + CHUNK);
+      reader.readAsArrayBuffer(slice);
+    }
+
+    readNext();
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// RECEIVER
+// ════════════════════════════════════════════════════════════
+function initReceiver(sid) {
+  document.getElementById('sender-offline-warn').classList.add('show');
+  initModeToggle('mode-toggle-recv', 'mode-hint-recv', () => receiverMode, m => { receiverMode = m; });
+
+  const dlBtn   = document.getElementById('dl-btn');
+  const dlStatus= document.getElementById('dl-status');
+  const dlIco   = document.getElementById('dl-ico');
+  const dlName  = document.getElementById('dl-name');
+  const dlSize  = document.getElementById('dl-size');
+  const recvProg= document.getElementById('recv-prog');
+  const recvFill= document.getElementById('recv-fill');
+  const recvPct = document.getElementById('recv-prog-pct');
+  const recvLbl = document.getElementById('recv-prog-lbl');
+  const homeLink= document.getElementById('home-link');
+
+  homeLink.onclick = () => { location.href = location.pathname; };
+
+  function step(n, state) {
+    const dot = document.getElementById('s'+n);
+    const lbl = document.getElementById('s'+n+'l');
+    dot.className = 'step-dot ' + state;
+    lbl.className = 'step-lbl ' + state;
+  }
+
+  // Load session from Firestore
+  const sessionRef = db.collection('s').doc(sid);
+  sessionRef.get().then(doc => {
+    if (!doc.exists) {
+      dlBtn.disabled = true;
+      dlStatus.className = 'status err';
+      dlStatus.textContent = 'Сессия не найдена. Возможно, ссылка устарела.';
+      document.getElementById('sender-offline-warn').classList.remove('show');
+      return;
+    }
+
+    const data = doc.data();
+    dlIco.textContent  = emoji(data.fn);
+    dlName.textContent = data.fn;
+    dlSize.textContent = fmt(data.fs);
+    document.title     = data.fn + ' — FileBeam';
+
+    dlBtn.addEventListener('click', () => connect(data));
+  }).catch(err => {
+    dlStatus.className = 'status err';
+    dlStatus.textContent = 'Ошибка загрузки: ' + err.message;
+  });
+
+  async function connect(sessionData) {
+    dlBtn.disabled = true;
+    dlStatus.textContent = '';
+    step(1, 'active'); step(2,''); step(3,''); step(4,'');
+
+    let pc = null;
+    let chunks = [];
+    let meta = null;
+    let received = 0;
+
+    try {
+      const iceConfig = await getICE(receiverMode);
+      pc = new RTCPeerConnection(iceConfig);
+
+      // ICE candidates → Firestore
+      pc.onicecandidate = e => {
+        if (e.candidate) {
+          sessionRef.collection('rc').add(e.candidate.toJSON()).catch(()=>{});
+        }
+      };
+
+      pc.onconnectionstatechange = () => {
+        if (['failed','disconnected','closed'].includes(pc.connectionState)) {
+          dlStatus.className = 'status err';
+          dlStatus.textContent = 'Соединение потеряно. Обновите страницу и попробуйте снова.';
+          step(1, 'err');
+        }
+      };
+
+      // DataChannel from sender
+      pc.ondatachannel = e => {
+        step(2, 'done'); step(3, 'active');
+        recvProg.classList.add('show');
+
+        const dc = e.channel;
+        dc.binaryType = 'arraybuffer';
+
+        dc.onopen = () => {
+          dc.send(JSON.stringify({ t: 'ready' }));
+        };
+
+        dc.onmessage = ev => {
+          if (typeof ev.data === 'string') {
+            const msg = JSON.parse(ev.data);
+            if (msg.t === 'meta') {
+              meta = msg;
+            } else if (msg.t === 'done') {
+              // Assemble and download
+              step(3, 'done'); step(4, 'active');
+              const blob = new Blob(chunks, { type: meta.mime || 'application/octet-stream' });
+              const url  = URL.createObjectURL(blob);
+              const a    = document.createElement('a');
+              a.href     = url;
+              a.download = meta.name;
+              document.body.appendChild(a);
+              a.click();
+              setTimeout(() => { URL.revokeObjectURL(url); document.body.removeChild(a); }, 3000);
+
+              step(4, 'done');
+              recvLbl.classList.remove('pulsing');
+              recvLbl.textContent = 'Получено';
+              recvPct.textContent = '100%';
+              recvFill.style.width = '100%';
+              dlStatus.className  = 'status ok';
+              dlStatus.textContent = '✓ Файл сохранён в загрузки';
+              document.getElementById('sender-offline-warn').classList.remove('show');
+
+              dlBtn.disabled = false;
+              dlBtn.textContent = '⬇ Скачать снова';
+              dlBtn.onclick = () => {
+                chunks = []; received = 0; meta = null;
+                connect(sessionData);
+              };
+            }
+          } else {
+            // Binary chunk
+            chunks.push(ev.data);
+            received += ev.data.byteLength;
+            const total = meta?.size || 1;
+            const pct   = Math.min(100, Math.round(received / total * 100));
+            recvFill.style.width = pct + '%';
+            recvPct.textContent  = pct + '%';
+          }
+        };
+
+        dc.onerror = err => {
+          dlStatus.className = 'status err';
+          dlStatus.textContent = 'Ошибка канала данных';
+          step(3, 'err');
+        };
+      };
+
+      // Set remote description (offer)
+      await pc.setRemoteDescription(sessionData.o);
+      step(1, 'done'); step(2, 'active');
+
+      // Create answer
+      const answer = await pc.createAnswer();
+      await pc.setLocalDescription(answer);
+
+      // Store answer in Firestore
+      await sessionRef.update({ a: { sdp: answer.sdp, type: answer.type } });
+
+      // Listen for sender ICE candidates
+      let remoteSet = true; // we already set remote desc above
+      sessionRef.collection('sc').onSnapshot(snap => {
+        snap.docChanges().forEach(ch => {
+          if (ch.type === 'added') {
+            pc.addIceCandidate(new RTCIceCandidate(ch.doc.data())).catch(()=>{});
+          }
+        });
+      });
+
+    } catch(err) {
+      dlStatus.className = 'status err';
+      dlStatus.textContent = 'Ошибка: ' + err.message;
+      dlBtn.disabled = false;
+      step(1, 'err');
+    }
+  }
+}
+</script>
+</body>
+</html>
