@@ -20,7 +20,19 @@ try{
   const motionBytes=Buffer.from(fs.readFileSync(path.join(root,'public','motion-v2.br.b64'),'utf8').trim(),'base64');
   const motionSources=JSON.parse(zlib.brotliDecompressSync(motionBytes).toString('utf8'));
   for(const type of ['css','js']){
-    const src=motionSources[type];
+    let src=motionSources[type];
+    // The orbit art is positioned at translateX(-50%); preserve that anchor
+    // during staggered WAAPI entrances so the illustration never jumps sideways.
+    if(type==='js'){
+      src=src.replace(
+        "      const anim = play(el,[{opacity:0,transform:'translate3d(0,22px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:550,delay:140+i*78,easing:ease});",
+        "      const phones = selector === '.hero-phones';\\n      const start = phones ? 'translateX(-50%) translateY(22px)' : 'translate3d(0,22px,0)';\\n      const end = phones ? 'translateX(-50%) translateY(0)' : 'translate3d(0,0,0)';\\n      const anim = play(el,[{opacity:0,transform:start},{opacity:1,transform:end}],{duration:550,delay:140+i*78,easing:ease});".replaceAll('\\n','\n')
+      );
+      src=src.replace(
+        "      play(node,[\\n        {opacity:isNav?.45:0,transform:`translate3d(0,${isNav?35:42}px,0) scale(.96)`,filter:isNav?'none':'blur(4px)'},\\n        {opacity:1,transform:'translate3d(0,-3px,0) scale(1.005)',filter:'blur(0px)',offset:.82},\\n        {opacity:1,transform:'translate3d(0,0,0) scale(1)',filter:'blur(0px)'}\\n      ],{duration:850,delay,easing:spring,fill:'none'});".replaceAll('\\n','\n'),
+        "      const phones = selector === '.hero-phones';\\n      const t = (y,scale=1) => phones ? `translateX(-50%) translateY(${y}px) scale(${scale})` : `translate3d(0,${y}px,0) scale(${scale})`;\\n      play(node,[\\n        {opacity:isNav?.45:0,transform:t(isNav?35:42,.96),filter:isNav?'none':'blur(4px)'},\\n        {opacity:1,transform:t(-3,1.005),filter:'blur(0px)',offset:.82},\\n        {opacity:1,transform:t(0,1),filter:'blur(0px)'}\\n      ],{duration:850,delay,easing:spring,fill:'none'});".replaceAll('\\n','\n')
+      );
+    }
     if(!src || src.length < 1000)throw new Error('Invalid PhoneDrop motion '+type+' source');
     fs.writeFileSync(path.join(root,'public','finishing.'+type),src);
     fs.writeFileSync(path.join(target,'finishing.'+type),src);
