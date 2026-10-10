@@ -1,0 +1,36 @@
+name: Pack PhoneDrop UI for Render
+on:
+  push:
+    branches:
+      - phonedrop-render
+    paths:
+      - 'public/finishing.css'
+      - 'public/finishing.js'
+      - 'scripts/repack-phonedrop.mjs'
+      - '.github/workflows/repack-phonedrop.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  repack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Merge UX layer into deployed archive
+        run: node scripts/repack-phonedrop.mjs
+      - name: Publish rebuilt source bundle
+        run: |
+          git config user.name "PhoneDrop CI"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add phonedrop-src.br.b64
+          if ! git diff --cached --quiet; then
+            git commit -m "Build: publish PhoneDrop animation and UX polish"
+            git push
+          fi
