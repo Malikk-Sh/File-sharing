@@ -4,6 +4,8 @@ on:
     branches:
       - phonedrop-render
     paths:
+      - 'public/styles.css'
+      - 'public/index.html'
       - 'public/finishing.css'
       - 'public/finishing.js'
       - 'public/motion-v2.br.b64'
