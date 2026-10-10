@@ -16,29 +16,16 @@ try{
 
   const target=path.join(work,'public');
   if(!fs.existsSync(path.join(target,'index.html')))throw new Error('Archive has no public/index.html');
-  // Motion System 2.0: keep editable sources and deployed bundle in sync.
-  const motionBytes=Buffer.from(fs.readFileSync(path.join(root,'public','motion-v2.br.b64'),'utf8').trim(),'base64');
-  const motionSources=JSON.parse(zlib.brotliDecompressSync(motionBytes).toString('utf8'));
-  for(const type of ['css','js']){
-    let src=motionSources[type];
-    // The orbit art is positioned at translateX(-50%); preserve that anchor
-    // during staggered WAAPI entrances so the illustration never jumps sideways.
-    if(type==='js'){
-      src=src.replace(
-        "      const anim = play(el,[{opacity:0,transform:'translate3d(0,22px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:550,delay:140+i*78,easing:ease});",
-        "      const phones = selector === '.hero-phones';\\n      const start = phones ? 'translateX(-50%) translateY(22px)' : 'translate3d(0,22px,0)';\\n      const end = phones ? 'translateX(-50%) translateY(0)' : 'translate3d(0,0,0)';\\n      const anim = play(el,[{opacity:0,transform:start},{opacity:1,transform:end}],{duration:550,delay:140+i*78,easing:ease});".replaceAll('\\n','\n')
-      );
-      src=src.replace(
-        "      play(node,[\\n        {opacity:isNav?.45:0,transform:`translate3d(0,${isNav?35:42}px,0) scale(.96)`,filter:isNav?'none':'blur(4px)'},\\n        {opacity:1,transform:'translate3d(0,-3px,0) scale(1.005)',filter:'blur(0px)',offset:.82},\\n        {opacity:1,transform:'translate3d(0,0,0) scale(1)',filter:'blur(0px)'}\\n      ],{duration:850,delay,easing:spring,fill:'none'});".replaceAll('\\n','\n'),
-        "      const phones = selector === '.hero-phones';\\n      const t = (y,scale=1) => phones ? `translateX(-50%) translateY(${y}px) scale(${scale})` : `translate3d(0,${y}px,0) scale(${scale})`;\\n      play(node,[\\n        {opacity:isNav?.45:0,transform:t(isNav?35:42,.96),filter:isNav?'none':'blur(4px)'},\\n        {opacity:1,transform:t(-3,1.005),filter:'blur(0px)',offset:.82},\\n        {opacity:1,transform:t(0,1),filter:'blur(0px)'}\\n      ],{duration:850,delay,easing:spring,fill:'none'});".replaceAll('\\n','\n')
-      );
-    }
-    if(!src || src.length < 1000)throw new Error('Invalid PhoneDrop motion '+type+' source');
-    fs.writeFileSync(path.join(root,'public','finishing.'+type),src);
-    fs.writeFileSync(path.join(target,'finishing.'+type),src);
+  // Deploy the editable, reviewed sources directly. Do not overwrite them from
+  // the old compressed source archive (which previously reverted UI fixes).
+  for (const file of ['styles.css','finishing.css','finishing.js']) {
+    const srcPath=path.join(root,'public',file);
+    if(!fs.existsSync(srcPath))throw new Error('Missing release source '+file);
+    fs.copyFileSync(srcPath,path.join(target,file));
   }
   const indexPath=path.join(target,'index.html');
-  let html=fs.readFileSync(indexPath,'utf8');
+  // Root index is the editable source of truth for cache-busted assets.
+  let html=fs.readFileSync(path.join(root,'public','index.html'),'utf8');
   if(!html.includes('/finishing.css')){
     html=html.replace('</head>','  <link rel="stylesheet" href="/finishing.css?v=2">\n</head>');
   }
