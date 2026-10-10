@@ -49,7 +49,7 @@ button:focus-visible,.send-tile:focus-within{outline:2px solid #a99bff;outline-o
 @keyframes orbit-breathe{0%,100%{transform:translateX(-50%) translateY(0) scale(1)}50%{transform:translateX(-50%) translateY(-10px) scale(1.035)}}
 @keyframes panel-light{0%,100%{opacity:.65}50%{opacity:1}}
 @keyframes connection-pulse{0%,100%{box-shadow:0 0 0 4px #49e9aa14,0 0 10px #49e9aa6a}50%{box-shadow:0 0 0 10px #49e9aa0b,0 0 22px #49e9aadd}}
-@media(prefers-reduced-motion:no-preference){
+@media(min-width:0px){
  .view[data-screen=room].is-active .hero-phones{animation:orbit-breathe 6.7s ease-in-out infinite;will-change:transform}
  .view[data-screen=room].is-active .hero-glow{animation:panel-light 5.5s ease-in-out infinite alternate}
  .connection-indicator.live i,#peerChip.connected .led{animation:connection-pulse 2.6s ease-in-out infinite}
@@ -57,7 +57,7 @@ button:focus-visible,.send-tile:focus-within{outline:2px solid #a99bff;outline-o
 /* Progress shimmer with no layout recalculations */
 .file-progress>span,.mini-bar>i,.progress>div{position:relative;overflow:hidden;transition:width .16s linear}
 @keyframes loading-light{0%{transform:translateX(-180%)}100%{transform:translateX(330%)}}
-@media(prefers-reduced-motion:no-preference){
+@media(min-width:0px){
 .file-progress:not([hidden])>span:after,.mini-bar>i:after,.progress:not([hidden])>div:after{content:"";position:absolute;inset:0;width:48%;background:linear-gradient(90deg,transparent,#fff9,transparent);animation:loading-light 1.35s linear infinite}
 }
 .transfer-mini:not([hidden]){box-shadow:0 8px 30px #111072ba,0 0 25px #5f4cce66}
@@ -67,5 +67,19 @@ button:focus-visible,.send-tile:focus-within{outline:2px solid #a99bff;outline-o
 /* Optimized mobile touch regions and short-screen behavior */
 @media(max-width:650px){.file-card{padding:10px}.file-actions .file-icon-action{width:40px;height:40px}.file-list{overscroll-behavior:contain}.code-copy{min-width:42px;min-height:42px}}
 @media(max-width:365px){.file-card{padding:8px}.file-actions .file-icon-action{width:35px;height:35px}.hero-heading h1{font-size:29px}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
 @media(prefers-reduced-transparency:reduce){.overlay-backdrop,.topbar,.bottom-nav,.send-sheet,.file-sheet,.settings-sheet{backdrop-filter:none;-webkit-backdrop-filter:none}}
+
+.motion-preference{display:flex;align-items:center;gap:13px;position:relative;cursor:pointer;margin:16px 0 14px;padding:14px 12px;border-radius:17px;border:1px solid #7771e077;background:linear-gradient(120deg,#252b5180,#131b32 88%);box-shadow:inset 0 1px #ffffff24,0 6px 24px #080c2a70;text-align:left}
+.motion-preference-icon{display:grid;place-items:center;width:38px;height:38px;flex:0 0 38px;color:#e6dcff;border-radius:12px;background:linear-gradient(145deg,#6955f1,#332870);box-shadow:0 5px 18px #7354f448;font-size:19px}
+.motion-preference-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}
+.motion-preference-copy strong{font-size:13px;font-weight:700;color:#f4f3ff}
+.motion-preference-copy small{font-size:11px;line-height:1.45;color:#a6b1d2}
+.motion-preference input{position:absolute;opacity:0;width:1px;height:1px}
+.motion-switch-track{width:46px;height:28px;border-radius:99px;border:1px solid #6b6c91;background:linear-gradient(150deg,#30395a,#1b233f);display:flex;align-items:center;padding:3px;flex:none;box-shadow:inset 0 2px 6px #090e2380;transition:background .24s ease,border-color .24s ease}
+.motion-switch-track>span{width:20px;height:20px;border-radius:50%;background:linear-gradient(150deg,#ebefff,#b9bed6);box-shadow:0 2px 7px #040819a0;transition:transform .3s cubic-bezier(.18,.9,.2,1)}
+.motion-preference input:checked+.motion-switch-track{background:linear-gradient(125deg,#7158f5,#3f39be);border-color:#b3a4ff}
+.motion-preference input:checked+.motion-switch-track>span{transform:translateX(17px);background:white}
+.motion-preference:focus-within{outline:2px solid #bbaaff;outline-offset:3px}
+html[data-motion-mode="light"] .hero-phones,html[data-motion-mode="light"] .hero-glow,html[data-motion-mode="light"] .connection-indicator.live i,html[data-motion-mode="light"] .motion-nav-glider{animation:none!important}
+html[data-motion-mode="light"] .motion-wave{opacity:.2!important}
