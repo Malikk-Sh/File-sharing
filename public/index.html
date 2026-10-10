@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#080d19">
+  <meta name="description" content="PhoneDrop — передача файлов между телефонами и компьютерами через интернет без регистрации.">
+  <title>PhoneDrop — файлы ближе, чем кажется</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/assets/phones-orbit.webp" as="image">
+  <link rel="stylesheet" href="/styles.css?v=4">
+  <script src="/app.js?v=4" defer></script>
+</head>
+<body>
+<div class="app-shell">
+  <header class="topbar">
+    <button class="brand" type="button" data-go="room" aria-label="PhoneDrop — на главную">
+      <img src="/assets/brand-mark.webp" alt="" width="39" height="27"><span>PhoneDrop</span>
+    </button>
+    <div class="topbar-right">
+      <span class="connection-indicator" id="serverState" title="Статус сервера"><i></i><span>Соединение…</span></span>
+      <button class="icon-btn settings-btn" id="openSettings" type="button" aria-label="Настройки">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3.5 14 4l1 2 2.2.4L19 8l-.6 2.1L20 12l-1.6 1.9L19 16l-1.8 1.6-2.2.4-1 2-2 .5-2-.5-1-2-2.2-.4L5 16l.6-2.1L4 12l1.6-1.9L5 8l1.8-1.6L9 6l1-2z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="view-container" id="viewContainer">
+    <section class="view is-active" data-screen="room" aria-labelledby="homeTitle">
+      <div class="hero-stage">
+        <div class="hero-heading">
+          <span class="eyebrow">БЕЗ РЕГИСТРАЦИИ · МЕЖДУ ЛЮБЫМИ СЕТЯМИ</span>
+          <h1 id="homeTitle">Файлы ближе,<br><span>чем кажется</span></h1>
+          <p>Фото, видео, документы и архивы — напрямую между устройствами.</p>
+        </div>
+        <img class="hero-phones" src="/assets/phones-orbit.webp" alt="Два телефона, соединённых светящейся орбитой" width="750" height="824">
+        <div class="hero-gradient" aria-hidden="true"></div>
+      </div>
+      <div class="room-dashboard">
+        <div class="status-row" id="peerChip" aria-live="polite"><span class="led" id="peerLed"></span><div><strong id="peerState">Ожидаем второе устройство</strong><small id="deviceHint">Можно подключиться по коду или ссылке</small></div></div>
+        <div class="code-panel">
+          <div class="code-top"><span>ВАШ КОД КОМНАТЫ</span><button id="newRoom" class="subtle-button" type="button" title="Создать новую комнату">Новая комната ↗</button></div>
+          <div class="code-line"><strong id="roomCode" aria-label="Код комнаты">••••••••••</strong><button class="icon-btn code-copy" id="copyCode" type="button" title="Скопировать код" aria-label="Скопировать код"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="11" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h1"/></svg></button></div>
+          <p>Отправь код или ссылку на другое устройство</p>
+        </div>
+        <div class="room-actions">
+          <button class="action-primary" id="roomSend" type="button"><span class="action-icon">↑</span><span><strong>Отправить файлы</strong><small>Выбрать на этом устройстве</small></span><span class="action-arrow">↗</span></button>
+          <div class="action-secondary-row"><button type="button" class="action-secondary" id="roomJoin" data-go="connect"><span class="action-square">⌗</span><span>Ввести код</span><span>›</span></button><button type="button" class="action-secondary" id="showQr"><span class="action-square">▦</span><span>QR-код</span><span>›</span></button></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" data-screen="connect" aria-labelledby="connectTitle" hidden>
+      <div class="screen-head"><span class="eyebrow">БЫСТРОЕ ПОДКЛЮЧЕНИЕ</span><h2 id="connectTitle">Подключиться</h2><p>Один код — одна комната на двух устройствах.</p></div>
+      <div class="segment" role="tablist" aria-label="Способ подключения">
+        <button class="segment-btn active" type="button" data-connect-tab="code" aria-selected="true">Код</button>
+        <button class="segment-btn" type="button" data-connect-tab="qr" aria-selected="false">QR-код</button>
+        <button class="segment-btn" type="button" data-connect-tab="link" aria-selected="false">Ссылка</button>
+      </div>
+      <div class="connect-content">
+        <div class="connect-pane" data-connect-pane="code">
+          <div class="join-panel">
+            <span class="section-caption">ВВЕДИ КОД ДРУГОГО УСТРОЙСТВА</span>
+            <form id="joinForm" class="join-form">
+              <input id="joinCode" required maxlength="10" minlength="10" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Код комнаты из 10 символов" placeholder="10-значный код">
+              <button class="wide-primary" type="submit">Подключиться <span>→</span></button>
+            </form>
+            <p class="subtext">Код состоит из 10 букв и цифр. Его можно скопировать в комнате на другом устройстве.</p>
+          </div>
+          <button class="switch-method" type="button" data-switch-connect="qr"><span class="square-icon">▦</span><span><strong>Показать QR-код</strong><small>Для камеры другого устройства</small></span><span>›</span></button>
+          <button class="switch-method" type="button" data-switch-connect="link"><span class="square-icon">↗</span><span><strong>Поделиться ссылкой</strong><small>Мессенджер или системное меню</small></span><span>›</span></button>
+        </div>
+        <div class="connect-pane" data-connect-pane="qr" hidden>
+          <div class="qr-focus" id="qrWrap"><span class="section-caption">ОТСКАНИРУЙ НА ВТОРОМ УСТРОЙСТВЕ</span><div class="qr-image-frame"><img id="qrImage" src="" alt="QR-код комнаты PhoneDrop" width="230" height="230"></div><div class="qr-own-code" id="qrRoomCode">••••••••••</div><p>Наведите камеру второго телефона на QR-код. Приложение откроется автоматически.</p></div>
+          <button class="wide-primary outline-primary" id="qrCopyLink" type="button">Скопировать ссылку <span>↗</span></button>
+        </div>
+        <div class="connect-pane" data-connect-pane="link" hidden><div class="join-panel link-panel"><span class="section-caption">ССЫЛКА НА ЭТУ КОМНАТУ</span><div class="link-url" id="roomLink">phonedrop-p2p.onrender.com</div><button type="button" id="copyLink" class="wide-primary">Копировать ссылку <span>↗</span></button><button type="button" id="shareRoom" class="wide-secondary">Поделиться через телефон <span>↗</span></button><p class="subtext">По этой ссылке второе устройство подключится к комнате. Держите обе вкладки открытыми.</p></div></div>
+      </div>
+    </section>
+
+    <section class="view" data-screen="files" aria-labelledby="filesTitle" hidden>
+      <div class="screen-head file-heading"><span class="eyebrow">СЕССИЯ PHONEDROP</span><h2 id="filesTitle">Файлы комнаты</h2><p>Отправленные и полученные — в одном месте.</p></div>
+      <div class="segment file-segment" role="tablist" aria-label="Фильтр файлов"><button class="segment-btn active" type="button" data-filter="all" aria-selected="true">Все</button><button class="segment-btn" type="button" data-filter="outgoing" aria-selected="false">Отправленные</button><button class="segment-btn" type="button" data-filter="incoming" aria-selected="false">Полученные</button></div>
+      <div id="downloads" class="file-list" aria-live="polite"><div class="empty-files"><span class="empty-icon">▤</span><h3>Пока ничего нет</h3><p>После первой передачи файлы появятся здесь на обоих устройствах.</p><button type="button" id="emptySend" class="wide-primary">Отправить файл ↗</button></div></div>
+      <div class="files-footnote">Файлы не сохраняются на сервере. История доступна, пока вкладка открыта.</div>
+    </section>
+  </main>
+
+  <div class="transfer-mini" id="transferMini" hidden><span class="transfer-mini-icon">↑</span><div><strong id="miniTitle">Передача файла</strong><span id="miniDetail">Подготовка…</span><div class="mini-bar"><i id="miniFill"></i></div></div><button type="button" id="miniOpen" aria-label="Открыть передачу">⌃</button></div>
+  <nav class="bottom-nav" aria-label="Разделы"><button type="button" class="nav-link current" data-go="room" aria-label="Комната" aria-current="page"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg></span><small>Комната</small></button><button type="button" class="nav-link" data-go="files" aria-label="Файлы"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h8l5 5v14H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M14 2v6h5"/></svg></span><small>Файлы</small></button><button type="button" class="nav-link" data-go="connect" aria-label="Подключиться"><span class="nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="9" width="8" height="11" rx="2"/><rect x="13" y="4" width="8" height="11" rx="2"/><path d="M11 15h2"/></svg></span><small>Подключиться</small></button><button type="button" id="navSend" class="nav-send" aria-label="Отправить файлы"><span>↑</span></button></nav>
+</div>
+
+<div class="overlay" id="sendOverlay" hidden>
+  <div class="overlay-backdrop" data-close-overlay="send"></div>
+  <section class="send-sheet" role="dialog" aria-modal="true" aria-labelledby="sendTitle"><div class="sheet-handle"></div><div class="sheet-header"><div><span class="eyebrow">ПЕРЕДАЧА В КОМНАТУ</span><h2 id="sendTitle">Отправить файлы</h2></div><button type="button" class="icon-btn" id="closeSend" aria-label="Закрыть">×</button></div>
+    <div class="sheet-selection"><label class="send-tile selected-tile" for="mediaInput"><span class="tile-icon">▧</span><strong>Фото и видео</strong><small>Из галереи</small><input id="mediaInput" class="visually-hidden" type="file" multiple accept="image/*,video/*"></label><label class="send-tile" id="dropZone" for="fileInput" tabindex="0"><span class="tile-icon">▤</span><strong>Файлы</strong><small>Любые типы</small><input id="fileInput" class="visually-hidden" type="file" multiple></label><label class="send-tile" for="cameraInput"><span class="tile-icon">◉</span><strong>Камера</strong><small>Сделать фото</small><input id="cameraInput" class="visually-hidden" type="file" accept="image/*" capture="environment"></label><label class="send-tile" for="folderInput"><span class="tile-icon">▱</span><strong>Папка</strong><small>Несколько файлов</small><input id="folderInput" class="visually-hidden" type="file" webkitdirectory multiple></label></div>
+    <div class="selected-wrapper" id="selectedWrapper" hidden><div class="selected-head"><strong>Выбранные файлы <span id="selectedCount">0</span></strong><button type="button" id="clearSelection">Очистить</button></div><div class="selected-list" id="selectedList"></div></div>
+    <details class="advanced"><summary>Параметры передачи <span id="method">Автоматически</span></summary><div class="advanced-options"><label for="mode">Режим</label><select id="mode"><option value="auto">Авто — P2P или резерв</option><option value="p2p">Только P2P</option><option value="relay">Через Render</option></select><div class="limits" id="fileLimit">P2P до 500 МБ · резерв до 200 МБ</div></div></details>
+    <div class="progress" id="progress" hidden><div id="progressFill"></div></div>
+    <p class="message" id="message" aria-live="polite">Открой комнату на втором устройстве, затем выбери файл.</p>
+    <button id="sendSelected" class="wide-primary send-confirm" type="button" disabled><span id="sendSelectedLabel">Выбери файлы</span><span>↑</span></button>
+  </section>
+</div>
+<div class="overlay" id="settingsOverlay" hidden><div class="overlay-backdrop" data-close-overlay="settings"></div><section class="settings-sheet" role="dialog" aria-modal="true" aria-labelledby="settingsTitle"><div class="sheet-handle"></div><div class="sheet-header"><h2 id="settingsTitle">О PhoneDrop</h2><button id="closeSettings" class="icon-btn" type="button" aria-label="Закрыть">×</button></div><p>Передача между двумя устройствами через WebRTC. Если прямое соединение недоступно, работает резервная передача через Render.</p><p>Без облачного хранения. До 500 МБ напрямую и до 200 МБ через резервный канал. Для передачи держите обе страницы открытыми.</p><button type="button" class="wide-secondary" id="settingsNewRoom">Создать новую комнату ↗</button></section></div>
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>
