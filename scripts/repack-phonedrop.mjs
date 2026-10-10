@@ -16,7 +16,7 @@ try{
 
   const target=path.join(work,'public');
   if(!fs.existsSync(path.join(target,'index.html')))throw new Error('Archive has no public/index.html');
-  // Apply preferences to the actual unpacked live sources, not stale repository copies.
+  // Release Motion 3: start from the restored premium UI and apply the opt-in lightweight preference.
   const indexPath=path.join(target,'index.html');
   if(!fs.existsSync(path.join(target,'app.js')))throw new Error('Missing live PhoneDrop app');
   let styles=fs.readFileSync(path.join(target,'styles.css'),'utf8');
