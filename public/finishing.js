@@ -77,7 +77,10 @@
         : ['.screen-head','.segment','.connect-content'];
     cascade.forEach((selector,i) => {
       const el = incoming.querySelector(selector);
-      const anim = play(el,[{opacity:0,transform:'translate3d(0,22px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:550,delay:140+i*78,easing:ease});
+      const phones = selector === '.hero-phones';
+      const start = phones ? 'translateX(-50%) translateY(22px)' : 'translate3d(0,22px,0)';
+      const end = phones ? 'translateX(-50%) translateY(0)' : 'translate3d(0,0,0)';
+      const anim = play(el,[{opacity:0,transform:start},{opacity:1,transform:end}],{duration:550,delay:140+i*78,easing:ease});
       if (anim) pendingViewAnimations.push(anim);
     });
   };
@@ -358,10 +361,12 @@
       const node=document.querySelector(selector);
       if(!node)continue;
       const isNav=selector==='.bottom-nav';
+      const phones = selector === '.hero-phones';
+      const t = (y,scale=1) => phones ? `translateX(-50%) translateY(${y}px) scale(${scale})` : `translate3d(0,${y}px,0) scale(${scale})`;
       play(node,[
-        {opacity:isNav?.45:0,transform:`translate3d(0,${isNav?35:42}px,0) scale(.96)`,filter:isNav?'none':'blur(4px)'},
-        {opacity:1,transform:'translate3d(0,-3px,0) scale(1.005)',filter:'blur(0px)',offset:.82},
-        {opacity:1,transform:'translate3d(0,0,0) scale(1)',filter:'blur(0px)'}
+        {opacity:isNav?.45:0,transform:t(isNav?35:42,.96),filter:isNav?'none':'blur(4px)'},
+        {opacity:1,transform:t(-3,1.005),filter:'blur(0px)',offset:.82},
+        {opacity:1,transform:t(0,1),filter:'blur(0px)'}
       ],{duration:850,delay,easing:spring,fill:'none'});
     }
   }
