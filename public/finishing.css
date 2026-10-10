@@ -1,40 +1,71 @@
-/* PhoneDrop · final polish layer — deliberately independent from transfer engine */
-:root{--ease-out:cubic-bezier(.2,.8,.2,1)}
-button,.send-tile,summary{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-button,.send-tile{transition:transform .17s var(--ease-out),filter .17s ease,box-shadow .22s ease,border-color .22s ease}
-button:not(:disabled):active,.send-tile:active{transform:translateY(1px) scale(.975);filter:brightness(.95)}
-.icon-btn:active,.file-icon-action:active,.nav-send:active{transform:scale(.92)!important}
-.view.is-active{animation:screen-in .33s var(--ease-out) both}
-@keyframes screen-in{from{opacity:0;transform:translateY(8px);filter:blur(2px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
-.segment-btn.active{animation:tab-focus .24s var(--ease-out) both;box-shadow:inset 0 1px #fff6,0 5px 16px #4c36ff48}
-@keyframes tab-focus{from{filter:brightness(1.2);transform:scale(.97)}to{filter:brightness(1);transform:scale(1)}}
-@keyframes orbit{0%,100%{translate:0 0}50%{translate:0 -5px}}
-@keyframes led-breathe{0%,100%{box-shadow:0 0 0 5px #49e9aa16,0 0 10px #49e9aa65}50%{box-shadow:0 0 0 8px #49e9aa0e,0 0 17px #49e9aabb}}
-@media(prefers-reduced-motion:no-preference){.view.is-active .hero-phones{animation:orbit 8s ease-in-out infinite}.connection-indicator.live i,#peerChip.connected .led{animation:led-breathe 3.2s ease-in-out infinite}}
-.code-panel,.status-row,.file-card,.join-panel,.qr-focus,.switch-method,.send-tile,.action-secondary,.send-sheet,.file-sheet,.settings-sheet{backdrop-filter:blur(13px) saturate(1.1)}
-@media(hover:hover){.file-card:hover{border-color:#8990dca0;box-shadow:inset 0 1px #ffffff29,0 11px 27px #030819c2,0 0 20px #5c54ff18}.join-panel:hover,.status-row:hover{border-color:#7881cb8a}}
-.action-primary:hover,.wide-primary:hover{box-shadow:inset 0 1px #fff9,0 14px 37px #3928d76e,0 0 30px #745dff50}
-.icon-btn[data-copied]{color:#78ffd0!important;border-color:#64eabb!important;background:#174e44!important;box-shadow:0 0 0 3px #4ad6a422,inset 0 1px #e8fff725!important}
-.nav-link.current .nav-icon{transform:translateY(-2px)}.nav-icon{transition:transform .24s var(--ease-out)}
-.nav-link.current::before{width:36px;height:2px;top:-7px;background:linear-gradient(90deg,transparent,#aa95ff,transparent)}
-.nav-send{position:relative}.nav-send::after{content:"";position:absolute;inset:-5px;border:1px solid #8572ff43;border-radius:inherit;pointer-events:none}
-.send-tile{outline:0}.send-tile:focus-within{border-color:#b7aaff;box-shadow:inset 0 1px #fff7,0 0 0 2px #a395ff43,0 8px 22px #1b0e6fc4}
-@keyframes chip-in{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}.selected-chip{animation:chip-in .2s var(--ease-out) both}
-.file-card{transition:transform .18s ease,border-color .22s ease,box-shadow .22s ease}.file-card:focus-within{border-color:#8885ff98}
-.file-card .file-actions{position:relative;z-index:2}.file-actions .file-icon-action{width:40px;min-width:40px;height:40px}.file-icon-action svg{width:18px;height:18px}
-.file-progress>span,.mini-bar>i,.progress>div{transition:width .2s linear}
-@keyframes progress-sheen{to{transform:translateX(260%)}}
-@media(prefers-reduced-motion:no-preference){.file-progress:not([hidden])>span::after,.mini-bar>i::after,.progress:not([hidden])>div::after{content:"";position:absolute;inset:0;width:45%;background:linear-gradient(90deg,transparent,#ffffff65,transparent);transform:translateX(-150%);animation:progress-sheen 1.8s linear infinite}}
-.overlay:not([hidden]) .overlay-backdrop{animation:backdrop-show .22s ease-out both}
-.overlay:not([hidden]) .send-sheet,.overlay:not([hidden]) .settings-sheet,.overlay:not([hidden]) .file-sheet{animation:sheet-show .32s var(--ease-out) both}
-@keyframes backdrop-show{from{opacity:0}to{opacity:1}}
-@keyframes sheet-show{from{opacity:.55;transform:translateY(42px)}to{opacity:1;transform:translateY(0)}}
-.sheet-handle{width:36px;height:5px;border-radius:99px}
-.context-action{min-height:49px}.context-action:focus-visible{border-color:#b8acff}
-.toast:not([hidden]){animation:toast-show .26s var(--ease-out) both}
-@keyframes toast-show{from{opacity:0;transform:translate(-50%,10px) scale(.97)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
-@media(max-width:650px){.file-card{padding:9px 10px;gap:8px}.file-actions .file-icon-action{width:38px;min-width:38px;height:38px}.file-actions .file-icon-action svg{width:17px;height:17px}.code-copy{width:42px;height:42px}.nav-link{min-height:49px}.file-list{overscroll-behavior:contain}.view[data-screen=connect]{padding-bottom:12px}}
-@media(max-width:365px){.file-card{padding:8px 7px;gap:5px}.file-actions .file-icon-action{width:34px;min-width:34px;height:34px}.file-name{font-size:11.5px}.hero-heading h1{font-size:29px}}
-@media(max-height:620px) and (max-width:650px){.hero-heading h1{font-size:27px}.hero-heading{padding-top:12px}.room-dashboard{gap:5px}.code-panel{padding:8px 12px}.status-row{min-height:39px}.action-primary{min-height:44px}.action-secondary{min-height:36px}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;translate:none!important}}
-@media(prefers-reduced-transparency:reduce){.overlay-backdrop,.topbar,.bottom-nav,.send-sheet,.file-sheet,.settings-sheet{backdrop-filter:none}}
+/* PhoneDrop Motion System 2.0 — real transitions, spring sheets, luminous feedback */
+:root{--motion-ease:cubic-bezier(.18,.87,.2,1);--motion-quick:cubic-bezier(.2,.8,.2,1);--motion-glow:#8266ff}
+button,.send-tile,.switch-method,.file-card{ -webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button:not(:disabled):active,.send-tile:active{filter:brightness(1.13)}
+button:focus-visible,.send-tile:focus-within{outline:2px solid #a99bff;outline-offset:3px}
+/* Important: disable the old CSS-only entrance animation. The transition engine manages both sides. */
+.view.is-active,.segment-btn.active,.overlay:not([hidden]) .overlay-backdrop,.overlay:not([hidden]) .send-sheet,.overlay:not([hidden]) .settings-sheet,.overlay:not([hidden]) .file-sheet,.toast:not([hidden]){animation:none!important}
+.view-container{isolation:isolate;overflow:hidden}
+.view.motion-departing{position:absolute!important;inset:0!important;width:100%;margin:0!important;z-index:3!important;pointer-events:none!important;overflow:hidden!important;contain:layout paint}
+.view.is-active{position:relative;z-index:1}
+.view.motion-entering{pointer-events:none}
+/* Moving bottom navigation indicator (real FLIP animation) */
+.bottom-nav{position:relative;isolation:isolate}
+.bottom-nav .nav-link.current::before{opacity:0}
+.motion-nav-glider{position:absolute;top:1px;left:0;width:42px;height:3px;border-radius:12px;background:linear-gradient(90deg,#7789ff,#e2b9ff,#7751ff);box-shadow:0 0 10px #a578ff,0 4px 20px #8458ff88;pointer-events:none;z-index:2;will-change:transform}
+.nav-link.current .nav-icon{filter:drop-shadow(0 0 7px #8d73ff)!important;transform:translateY(-3px) scale(1.13)}
+.nav-icon{transition:transform .48s var(--motion-ease),filter .35s ease}
+.nav-link.current small{color:#e0d8ff;text-shadow:0 0 12px #b2a4ff}
+.nav-send{position:relative;box-shadow:inset 0 1px #fff9,0 0 0 3px #8066ff20,0 0 26px #8066ffa0,0 9px 18px #23157c;transition:filter .25s,transform .3s var(--motion-ease),box-shadow .4s}
+.nav-send::after{content:"";position:absolute;inset:-6px;border:1px solid #8974ff5b;border-radius:inherit;pointer-events:none}
+.nav-send:hover{transform:translateY(-3px);box-shadow:0 0 0 4px #7a60ff31,0 0 36px #8769ffd9,0 14px 24px #23157c}
+/* Fluid segmented indicators (do not interfere with accessible DOM tabs) */
+.segment{position:relative;isolation:isolate;overflow:hidden}
+.segment-btn{z-index:2;position:relative;transition:color .3s ease,text-shadow .3s ease}
+.segment-btn.active{background:transparent!important;box-shadow:none!important;border-color:transparent!important;color:#fff;text-shadow:0 0 12px #dfd9ff}
+.motion-segment-glider{position:absolute;z-index:1;top:4px;bottom:4px;left:4px;width:32%;border-radius:10px;pointer-events:none;will-change:transform,width;background:linear-gradient(120deg,#9985ff 0%,#7158ff 48%,#5437e9 100%);border:1px solid #dad0ff88;box-shadow:inset 0 1px #fff8,0 0 20px #8060ff70,0 6px 20px #4131bf8e}
+/* Add depth, light and tactile materials without extra image files */
+.code-panel,.status-row,.join-panel,.qr-focus,.file-card,.switch-method,.send-tile,.action-secondary,.send-sheet,.file-sheet,.settings-sheet{backdrop-filter:blur(17px) saturate(1.24);-webkit-backdrop-filter:blur(17px) saturate(1.24)}
+.code-panel{box-shadow:inset 0 1px #fffa,inset 0 -1px #a29aff36,0 13px 32px #03051299,0 0 24px #6652ff25}
+.status-row{box-shadow:inset 0 1px #ffffff31,0 8px 25px #02061094}
+.action-primary,.wide-primary{box-shadow:inset 0 1px #fff9,0 12px 30px #3827d56e,0 0 20px #7f61ff51;transition:filter .2s,box-shadow .3s,transform .36s var(--motion-ease)}
+.action-primary:hover,.wide-primary:not(:disabled):hover{transform:translateY(-2px);box-shadow:inset 0 1px #fff,0 16px 36px #4734fa7d,0 0 32px #8862ff8c}
+.file-card{transition:box-shadow .28s,border-color .25s,transform .28s var(--motion-ease);box-shadow:inset 0 1px #ffffff29,0 10px 24px #03071185}
+.file-card:focus-within,.file-card:hover{border-color:#8578ce97;box-shadow:inset 0 1px #fff5,0 13px 30px #030713aa,0 0 17px #7862ff2b}
+.file-icon-action{transition:transform .3s var(--motion-ease),box-shadow .25s,background .22s}
+.file-icon-action:hover{transform:translateY(-2px) scale(1.05);background:#51468b;box-shadow:0 6px 22px #5045a85c}
+.icon-btn[data-copied]{color:#86ffcf!important;border-color:#4fe2a8!important;background:#194d43!important;box-shadow:0 0 0 3px #3be6ad25,0 0 22px #3be6ad60!important}
+/* Sheets have entry and exit motion from JS; CSS supplies compositing and touch affordances */
+.overlay{isolation:isolate}
+.overlay-backdrop{will-change:opacity}
+.send-sheet,.settings-sheet,.file-sheet{will-change:transform,opacity;transform-origin:bottom center;contain:layout style}
+.sheet-handle{width:42px;height:5px;border-radius:99px;background:linear-gradient(90deg,#838dd6,#b3a9ff,#838dd6);box-shadow:0 0 13px #9c8cff5d;touch-action:none;cursor:grab}
+.sheet-handle:active{cursor:grabbing}
+.overlay.motion-closing{pointer-events:none}
+/* Pointer-origin wave: composited overlay, click-through */
+.motion-wave{position:absolute;z-index:9;pointer-events:none;width:24px;height:24px;border-radius:50%;background:radial-gradient(circle,#ffffff80 0%,#c6b9ff54 28%,#8e7bff2a 53%,transparent 72%);mix-blend-mode:screen;will-change:transform,opacity}
+.motion-tap{isolation:isolate}
+/* Ambient orbital energy: only animates few composited surfaces */
+@keyframes orbit-breathe{0%,100%{transform:translateX(-50%) translateY(0) scale(1)}50%{transform:translateX(-50%) translateY(-10px) scale(1.035)}}
+@keyframes panel-light{0%,100%{opacity:.65}50%{opacity:1}}
+@keyframes connection-pulse{0%,100%{box-shadow:0 0 0 4px #49e9aa14,0 0 10px #49e9aa6a}50%{box-shadow:0 0 0 10px #49e9aa0b,0 0 22px #49e9aadd}}
+@media(prefers-reduced-motion:no-preference){
+ .view[data-screen=room].is-active .hero-phones{animation:orbit-breathe 6.7s ease-in-out infinite;will-change:transform}
+ .view[data-screen=room].is-active .hero-glow{animation:panel-light 5.5s ease-in-out infinite alternate}
+ .connection-indicator.live i,#peerChip.connected .led{animation:connection-pulse 2.6s ease-in-out infinite}
+}
+/* Progress shimmer with no layout recalculations */
+.file-progress>span,.mini-bar>i,.progress>div{position:relative;overflow:hidden;transition:width .16s linear}
+@keyframes loading-light{0%{transform:translateX(-180%)}100%{transform:translateX(330%)}}
+@media(prefers-reduced-motion:no-preference){
+.file-progress:not([hidden])>span:after,.mini-bar>i:after,.progress:not([hidden])>div:after{content:"";position:absolute;inset:0;width:48%;background:linear-gradient(90deg,transparent,#fff9,transparent);animation:loading-light 1.35s linear infinite}
+}
+.transfer-mini:not([hidden]){box-shadow:0 8px 30px #111072ba,0 0 25px #5f4cce66}
+.toast{will-change:opacity,transform}
+.selected-chip{will-change:opacity,transform}
+.view[data-screen=connect] .connect-pane{transform-origin:top center}
+/* Optimized mobile touch regions and short-screen behavior */
+@media(max-width:650px){.file-card{padding:10px}.file-actions .file-icon-action{width:40px;height:40px}.file-list{overscroll-behavior:contain}.code-copy{min-width:42px;min-height:42px}}
+@media(max-width:365px){.file-card{padding:8px}.file-actions .file-icon-action{width:35px;height:35px}.hero-heading h1{font-size:29px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+@media(prefers-reduced-transparency:reduce){.overlay-backdrop,.topbar,.bottom-nav,.send-sheet,.file-sheet,.settings-sheet{backdrop-filter:none;-webkit-backdrop-filter:none}}
