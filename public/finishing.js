@@ -1,10 +1,10 @@
 /* PhoneDrop Motion System 2.0 — authored transitions, not decorative CSS. */
 (() => {
   'use strict';
-  const MOTION_KEY = 'phonedrop:light-animations';
-  let lightAnimations = false;
-  try { lightAnimations = localStorage.getItem(MOTION_KEY) === '1'; } catch {}
-  document.documentElement.dataset.motionMode = lightAnimations ? 'light' : 'full';
+  const MOTION_KEY='phonedrop:light-animations';
+  let lightAnimations=false;
+  try{lightAnimations=localStorage.getItem(MOTION_KEY)==='1';}catch{}
+  document.documentElement.dataset.motionMode=lightAnimations?'light':'full';
   const supportsAnimations = typeof Element.prototype.animate === 'function';
   const motion = () => supportsAnimations;
   const ease = 'cubic-bezier(.18,.88,.24,1)';
@@ -18,13 +18,13 @@
 
   function play(element, frames, options) {
     if (!element || !motion()) return null;
-    const timing = { duration: 500, easing: ease, fill: 'both', ...options };
-    if (lightAnimations) {
-      timing.duration = Math.max(130, Math.round((timing.duration||500)*.44));
-      timing.delay = Math.round((timing.delay||0)*.4);
-      frames = frames.map(frame => ({ ...frame, ...(typeof frame.filter==='string'&&frame.filter.includes('blur')?{filter:'none'}:{}) }));
+    const timing={duration:500,easing:ease,fill:'both',...options};
+    if(lightAnimations){
+      timing.duration=Math.max(130,Math.round((timing.duration||500)*.44));
+      timing.delay=Math.round((timing.delay||0)*.4);
+      frames=frames.map(f=>({...f,...(typeof f.filter==='string'&&f.filter.includes('blur')?{filter:'none'}:{})}));
     }
-    try { return element.animate(frames,timing); }
+    try{return element.animate(frames,timing);}
     catch { return null; }
   }
   function clearAnimations(animations) {
@@ -379,16 +379,15 @@
       ],{duration:850,delay,easing:spring,fill:'none'});
     }
   }
-  // Full motion by default; saved lightweight toggle in Settings.
   function installMotionSetting(){
     const host=document.querySelector('#settingsOverlay .settings-sheet');
     const next=host?.querySelector('#settingsNewRoom');
     if(!next||host.querySelector('#motionPreference'))return;
     const row=document.createElement('label');
-    row.id='motionPreference'; row.className='motion-preference';
-    row.innerHTML='<span class="motion-preference-icon" aria-hidden="true">✦</span><span class="motion-preference-copy"><strong>Облегчённые анимации</strong><small>Более короткие и спокойные переходы. По умолчанию — полные эффекты.</small></span><input id="lightAnimations" type="checkbox" role="switch" aria-label="Облегчённые анимации"><span class="motion-switch-track" aria-hidden="true"><span></span></span>';
+    row.id='motionPreference';row.className='motion-preference';
+    row.innerHTML='<span class="motion-preference-icon" aria-hidden="true">✦</span><span class="motion-preference-copy"><strong>Облегчённые анимации</strong><small>Короткие и спокойные переходы. По умолчанию — полные эффекты.</small></span><input id="lightAnimations" type="checkbox" role="switch" aria-label="Облегчённые анимации"><span class="motion-switch-track" aria-hidden="true"><span></span></span>';
     next.before(row);
-    const toggle=row.querySelector('input'); toggle.checked=lightAnimations;
+    const toggle=row.querySelector('input');toggle.checked=lightAnimations;
     toggle.addEventListener('change',()=>{
       lightAnimations=toggle.checked;
       document.documentElement.dataset.motionMode=lightAnimations?'light':'full';

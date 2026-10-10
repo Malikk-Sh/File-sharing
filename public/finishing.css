@@ -70,6 +70,7 @@ button:focus-visible,.send-tile:focus-within{outline:2px solid #a99bff;outline-o
 
 @media(prefers-reduced-transparency:reduce){.overlay-backdrop,.topbar,.bottom-nav,.send-sheet,.file-sheet,.settings-sheet{backdrop-filter:none;-webkit-backdrop-filter:none}}
 
+/* Motion preference, normal effects ignore system reduced motion. */
 .motion-preference{display:flex;align-items:center;gap:13px;position:relative;cursor:pointer;margin:16px 0 14px;padding:14px 12px;border-radius:17px;border:1px solid #7771e077;background:linear-gradient(120deg,#252b5180,#131b32 88%);box-shadow:inset 0 1px #ffffff24,0 6px 24px #080c2a70;text-align:left}
 .motion-preference-icon{display:grid;place-items:center;width:38px;height:38px;flex:0 0 38px;color:#e6dcff;border-radius:12px;background:linear-gradient(145deg,#6955f1,#332870);box-shadow:0 5px 18px #7354f448;font-size:19px}
 .motion-preference-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}
