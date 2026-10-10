@@ -6,6 +6,7 @@ on:
     paths:
       - 'public/finishing.css'
       - 'public/finishing.js'
+      - 'public/motion-v2.br.b64'
       - 'scripts/repack-phonedrop.mjs'
       - '.github/workflows/repack-phonedrop.yml'
   workflow_dispatch:
@@ -29,7 +30,7 @@ jobs:
         run: |
           git config user.name "PhoneDrop CI"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add phonedrop-src.br.b64
+          git add phonedrop-src.br.b64 public/finishing.css public/finishing.js
           if ! git diff --cached --quiet; then
             git commit -m "Build: publish PhoneDrop animation and UX polish"
             git push
