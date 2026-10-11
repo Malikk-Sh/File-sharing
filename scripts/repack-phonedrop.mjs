@@ -14,6 +14,11 @@ try{
   try{execFileSync('tar',['-xf',tar,'-C',work]);}
   finally{fs.rmSync(tar,{force:true});}
 
+  // Render's build unpacks a snapshot; explicitly place the current server in
+  // that snapshot, otherwise changes to server.js never reach production.
+  fs.copyFileSync(path.join(root,'server.js'),path.join(work,'server.js'));
+  fs.mkdirSync(path.join(work,'test'),{recursive:true});
+  fs.copyFileSync(path.join(root,'test','server.test.js'),path.join(work,'test','server.test.js'));
   const target=path.join(work,'public');
   if(!fs.existsSync(path.join(target,'index.html')))throw new Error('Archive has no public/index.html');
   // Release Motion 3: start from the restored premium UI and apply the opt-in lightweight preference.

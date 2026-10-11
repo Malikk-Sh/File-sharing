@@ -55,6 +55,16 @@ test('health and static assets', async () => {
   assert.match(html, /Файлы ближе/);
   assert.match(html, /data-screen="room"/);
   assert.match(html, /data-screen="files"/);
+  // Regression: Motion features must actually be served by the HTTP server.
+  for (const [asset,mime,marker] of [
+    ['finishing.js','application/javascript','phonedrop:light-animations'],
+    ['finishing.css','text/css','motion-preference']
+  ]) {
+    const resp=await fetch(`${base}/${asset}?v=3`);
+    assert.equal(resp.status,200,`${asset} must not be 404`);
+    assert.match(resp.headers.get('content-type')||'',new RegExp(mime));
+    assert.match(await resp.text(),new RegExp(marker));
+  }
   const art = await fetch(`${base}/assets/phones-orbit.webp`);
   assert.equal(art.status, 200);
   assert.match(art.headers.get('content-type'), /image\/webp/);

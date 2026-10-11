@@ -16,9 +16,11 @@ const types = new Map([
   ['/','text/html; charset=utf-8'],
   ['/app.js','application/javascript; charset=utf-8'],
   ['/styles.css','text/css; charset=utf-8'],
+  ['/finishing.js','application/javascript; charset=utf-8'],
+  ['/finishing.css','text/css; charset=utf-8'],
   ['/favicon.svg','image/svg+xml'],
 ]);
-const files = new Map([['/','index.html'],['/app.js','app.js'],['/styles.css','styles.css'],['/favicon.svg','favicon.svg']]);
+const files = new Map([['/','index.html'],['/app.js','app.js'],['/styles.css','styles.css'],['/finishing.js','finishing.js'],['/finishing.css','finishing.css'],['/favicon.svg','favicon.svg']]);
 
 function headers(res, mime) {
   res.setHeader('Content-Type', mime);

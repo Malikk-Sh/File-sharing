@@ -9,6 +9,8 @@ on:
       - 'public/finishing.css'
       - 'public/finishing.js'
       - 'public/motion-v2.br.b64'
+      - 'server.js'
+      - 'test/server.test.js'
       - 'scripts/repack-phonedrop.mjs'
       - '.github/workflows/repack-phonedrop.yml'
   workflow_dispatch:
@@ -28,6 +30,14 @@ jobs:
           node-version: '22'
       - name: Merge UX layer into deployed archive
         run: node scripts/repack-phonedrop.mjs
+      - name: Test the exact release bundle
+        run: |
+          mkdir -p /tmp/phonedrop-ci
+          node -e "const fs=require('node:fs'),z=require('node:zlib');fs.writeFileSync('/tmp/phonedrop-ci/release.tar',z.brotliDecompressSync(Buffer.from(fs.readFileSync('phonedrop-src.br.b64','utf8').trim(),'base64')))"
+          tar -xf /tmp/phonedrop-ci/release.tar -C /tmp/phonedrop-ci
+          cd /tmp/phonedrop-ci
+          npm install --omit=dev --no-audit --no-fund
+          npm test
       - name: Publish rebuilt source bundle
         run: |
           git config user.name "PhoneDrop CI"
