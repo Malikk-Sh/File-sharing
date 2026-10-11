@@ -32,40 +32,63 @@
     animations.length = 0;
   }
   const originalNavigate = navigate;
-  // Snapshot only the active page content. Never scale the live layout.
-  let currentScreenTransition = null;
   navigate = function(screen, options) {
     if (!screens.includes(screen)) return;
     const oldName = activeScreen;
     if (screen === oldName) { originalNavigate(screen, options); return; }
-    const direction = Math.sign(screens.indexOf(screen) - screens.indexOf(oldName)) || 1;
-    document.documentElement.dataset.screenDirection = direction > 0 ? 'forward' : 'back';
+    const leaving = document.querySelector(`[data-screen="${oldName}"]`);
+    const incoming = document.querySelector(`[data-screen="${screen}"]`);
     clearAnimations(pendingViewAnimations);
+    // Any interrupted transition has to leave exactly one visible view.
     for (const panel of document.querySelectorAll('.view.motion-departing')) {
       panel.classList.remove('motion-departing');
       panel.hidden = true;
-      panel.inert = false;
       panel.removeAttribute('aria-hidden');
     }
-    if (currentScreenTransition) { try { currentScreenTransition.skipTransition(); } catch {} }
-    if (motion() && typeof document.startViewTransition === 'function') {
-      currentScreenTransition = document.startViewTransition(() => {
-        originalNavigate(screen, options);
-        moveNavGlider();
-      });
-      currentScreenTransition.finished.catch(() => {}).then(() => { currentScreenTransition = null; });
-      return;
-    }
-    // Fallback for older WebViews: lightweight opacity and pixel shift only.
     originalNavigate(screen, options);
     moveNavGlider();
-    if (!motion()) return;
-    const incoming = document.querySelector('[data-screen="' + screen + '"]');
-    const anim = play(incoming, [
-      { opacity: .5, transform: 'translate3d(' + (direction * 18) + 'px,0,0)' },
-      { opacity: 1, transform: 'translate3d(0,0,0)' }
-    ], { duration: 360, easing: 'cubic-bezier(.18,.85,.24,1)', fill: 'none' });
-    if (anim) pendingViewAnimations.push(anim);
+    if (!motion() || !leaving || !incoming) return;
+    const direction = Math.sign(screens.indexOf(screen) - screens.indexOf(oldName)) || 1;
+    // Keep the outgoing screen visible until its EXIT animation has actually finished.
+    leaving.hidden = false;
+    leaving.classList.add('motion-departing');
+    leaving.setAttribute('aria-hidden', 'true');
+    leaving.inert = true;
+    incoming.classList.add('motion-entering');
+    const out = play(leaving, [
+      {transform:'translate3d(0,0,0) scale(1)',opacity:1,filter:'blur(0px)'},
+      {transform:`translate3d(${-direction*24}%,0,0) scale(.95)`,opacity:0,filter:'blur(6px)'}
+    ], {duration:460,easing:'cubic-bezier(.55,0,.3,1)'});
+    const into = play(incoming, [
+      {transform:`translate3d(${direction*32}%,12px,0) scale(.955)`,opacity:.22,filter:'blur(8px)'},
+      {transform:'translate3d(0,0,0) scale(1)',opacity:1,filter:'blur(0px)'}
+    ], {duration:630,easing:spring});
+    if (out) {
+      pendingViewAnimations.push(out);
+      out.finished.catch(()=>{}).then(() => {
+        if (leaving.classList.contains('motion-departing')) {
+          leaving.hidden = true;
+          leaving.classList.remove('motion-departing');
+          leaving.inert = false;
+          leaving.removeAttribute('aria-hidden');
+        }
+      });
+    } else { leaving.hidden = true; leaving.classList.remove('motion-departing'); leaving.inert = false; }
+    if (into) {
+      pendingViewAnimations.push(into);
+      into.finished.catch(()=>{}).then(()=>incoming.classList.remove('motion-entering'));
+    } else incoming.classList.remove('motion-entering');
+    // Reveal the new screen as a sequence, without delaying access to controls.
+    const cascade = screen === 'room'
+      ? ['.hero-heading','.hero-phones','.status-row','.code-panel','.room-actions']
+      : screen === 'files'
+        ? ['.screen-head','.file-segment','.file-list','.files-footnote']
+        : ['.screen-head','.segment','.connect-content'];
+    cascade.forEach((selector,i) => {
+      const el = incoming.querySelector(selector);
+      const anim = play(el,[{opacity:0,transform:'translate3d(0,22px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:550,delay:140+i*78,easing:ease});
+      if (anim) pendingViewAnimations.push(anim);
+    });
   };
 
   // Real travelling navigation light instead of instant active-class switches.
@@ -337,7 +360,7 @@
   function intro(){
     if(!motion())return;
     const items=[
-      ['.topbar',0],['.hero-heading',95],['.status-row',330],
+      ['.topbar',0],['.hero-heading',95],['.hero-phones',230],['.status-row',330],
       ['.code-panel',405],['.room-actions',470],['.bottom-nav',510]
     ];
     for(const [selector,delay] of items){
