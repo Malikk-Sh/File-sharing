@@ -1,0 +1,86 @@
+/* PhoneDrop Motion System 2.0 — real transitions, spring sheets, luminous feedback */
+:root{--motion-ease:cubic-bezier(.18,.87,.2,1);--motion-quick:cubic-bezier(.2,.8,.2,1);--motion-glow:#8266ff}
+button,.send-tile,.switch-method,.file-card{ -webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button:not(:disabled):active,.send-tile:active{filter:brightness(1.13)}
+button:focus-visible,.send-tile:focus-within{outline:2px solid #a99bff;outline-offset:3px}
+/* Important: disable the old CSS-only entrance animation. The transition engine manages both sides. */
+.view.is-active,.segment-btn.active,.overlay:not([hidden]) .overlay-backdrop,.overlay:not([hidden]) .send-sheet,.overlay:not([hidden]) .settings-sheet,.overlay:not([hidden]) .file-sheet,.toast:not([hidden]){animation:none!important}
+.view-container{isolation:isolate;overflow:hidden}
+.view.motion-departing{position:absolute!important;inset:0!important;width:100%;margin:0!important;z-index:3!important;pointer-events:none!important;overflow:hidden!important;contain:layout paint}
+.view.is-active{position:relative;z-index:1}
+.view.motion-entering{pointer-events:none}
+/* Moving bottom navigation indicator (real FLIP animation) */
+.bottom-nav{position:relative;isolation:isolate}
+.bottom-nav .nav-link.current::before{opacity:0}
+.motion-nav-glider{position:absolute;top:1px;left:0;width:42px;height:3px;border-radius:12px;background:linear-gradient(90deg,#7789ff,#e2b9ff,#7751ff);box-shadow:0 0 10px #a578ff,0 4px 20px #8458ff88;pointer-events:none;z-index:2;will-change:transform}
+.nav-link.current .nav-icon{filter:drop-shadow(0 0 7px #8d73ff)!important;transform:translateY(-3px) scale(1.13)}
+.nav-icon{transition:transform .48s var(--motion-ease),filter .35s ease}
+.nav-link.current small{color:#e0d8ff;text-shadow:0 0 12px #b2a4ff}
+.nav-send{position:relative;box-shadow:inset 0 1px #fff9,0 0 0 3px #8066ff20,0 0 26px #8066ffa0,0 9px 18px #23157c;transition:filter .25s,transform .3s var(--motion-ease),box-shadow .4s}
+.nav-send::after{content:"";position:absolute;inset:-6px;border:1px solid #8974ff5b;border-radius:inherit;pointer-events:none}
+.nav-send:hover{transform:translateY(-3px);box-shadow:0 0 0 4px #7a60ff31,0 0 36px #8769ffd9,0 14px 24px #23157c}
+/* Fluid segmented indicators (do not interfere with accessible DOM tabs) */
+.segment{position:relative;isolation:isolate;overflow:hidden}
+.segment-btn{z-index:2;position:relative;transition:color .3s ease,text-shadow .3s ease}
+.segment-btn.active{background:transparent!important;box-shadow:none!important;border-color:transparent!important;color:#fff;text-shadow:0 0 12px #dfd9ff}
+.motion-segment-glider{position:absolute;z-index:1;top:4px;bottom:4px;left:4px;width:32%;border-radius:10px;pointer-events:none;will-change:transform,width;background:linear-gradient(120deg,#9985ff 0%,#7158ff 48%,#5437e9 100%);border:1px solid #dad0ff88;box-shadow:inset 0 1px #fff8,0 0 20px #8060ff70,0 6px 20px #4131bf8e}
+/* Add depth, light and tactile materials without extra image files */
+.code-panel,.status-row,.join-panel,.qr-focus,.file-card,.switch-method,.send-tile,.action-secondary,.send-sheet,.file-sheet,.settings-sheet{backdrop-filter:blur(17px) saturate(1.24);-webkit-backdrop-filter:blur(17px) saturate(1.24)}
+.code-panel{box-shadow:inset 0 1px #fffa,inset 0 -1px #a29aff36,0 13px 32px #03051299,0 0 24px #6652ff25}
+.status-row{box-shadow:inset 0 1px #ffffff31,0 8px 25px #02061094}
+.action-primary,.wide-primary{box-shadow:inset 0 1px #fff9,0 12px 30px #3827d56e,0 0 20px #7f61ff51;transition:filter .2s,box-shadow .3s,transform .36s var(--motion-ease)}
+.action-primary:hover,.wide-primary:not(:disabled):hover{transform:translateY(-2px);box-shadow:inset 0 1px #fff,0 16px 36px #4734fa7d,0 0 32px #8862ff8c}
+.file-card{transition:box-shadow .28s,border-color .25s,transform .28s var(--motion-ease);box-shadow:inset 0 1px #ffffff29,0 10px 24px #03071185}
+.file-card:focus-within,.file-card:hover{border-color:#8578ce97;box-shadow:inset 0 1px #fff5,0 13px 30px #030713aa,0 0 17px #7862ff2b}
+.file-icon-action{transition:transform .3s var(--motion-ease),box-shadow .25s,background .22s}
+.file-icon-action:hover{transform:translateY(-2px) scale(1.05);background:#51468b;box-shadow:0 6px 22px #5045a85c}
+.icon-btn[data-copied]{color:#86ffcf!important;border-color:#4fe2a8!important;background:#194d43!important;box-shadow:0 0 0 3px #3be6ad25,0 0 22px #3be6ad60!important}
+/* Sheets have entry and exit motion from JS; CSS supplies compositing and touch affordances */
+.overlay{isolation:isolate}
+.overlay-backdrop{will-change:opacity}
+.send-sheet,.settings-sheet,.file-sheet{will-change:transform,opacity;transform-origin:bottom center;contain:layout style}
+.sheet-handle{width:42px;height:5px;border-radius:99px;background:linear-gradient(90deg,#838dd6,#b3a9ff,#838dd6);box-shadow:0 0 13px #9c8cff5d;touch-action:none;cursor:grab}
+.sheet-handle:active{cursor:grabbing}
+.overlay.motion-closing{pointer-events:none}
+/* Pointer-origin wave: composited overlay, click-through */
+.motion-wave{position:absolute;z-index:9;pointer-events:none;width:24px;height:24px;border-radius:50%;background:radial-gradient(circle,#ffffff80 0%,#c6b9ff54 28%,#8e7bff2a 53%,transparent 72%);mix-blend-mode:screen;will-change:transform,opacity}
+.motion-tap{isolation:isolate}
+/* Ambient orbital energy: only animates few composited surfaces */
+@keyframes orbit-breathe{0%,100%{transform:translateX(-50%) translateY(0) scale(1)}50%{transform:translateX(-50%) translateY(-10px) scale(1.035)}}
+@keyframes panel-light{0%,100%{opacity:.65}50%{opacity:1}}
+@keyframes connection-pulse{0%,100%{box-shadow:0 0 0 4px #49e9aa14,0 0 10px #49e9aa6a}50%{box-shadow:0 0 0 10px #49e9aa0b,0 0 22px #49e9aadd}}
+@media(min-width:0px){
+ .view[data-screen=room].is-active .hero-phones{animation:orbit-breathe 6.7s ease-in-out infinite;will-change:transform}
+ .view[data-screen=room].is-active .hero-glow{animation:panel-light 5.5s ease-in-out infinite alternate}
+ .connection-indicator.live i,#peerChip.connected .led{animation:connection-pulse 2.6s ease-in-out infinite}
+}
+/* Progress shimmer with no layout recalculations */
+.file-progress>span,.mini-bar>i,.progress>div{position:relative;overflow:hidden;transition:width .16s linear}
+@keyframes loading-light{0%{transform:translateX(-180%)}100%{transform:translateX(330%)}}
+@media(min-width:0px){
+.file-progress:not([hidden])>span:after,.mini-bar>i:after,.progress:not([hidden])>div:after{content:"";position:absolute;inset:0;width:48%;background:linear-gradient(90deg,transparent,#fff9,transparent);animation:loading-light 1.35s linear infinite}
+}
+.transfer-mini:not([hidden]){box-shadow:0 8px 30px #111072ba,0 0 25px #5f4cce66}
+.toast{will-change:opacity,transform}
+.selected-chip{will-change:opacity,transform}
+.view[data-screen=connect] .connect-pane{transform-origin:top center}
+/* Optimized mobile touch regions and short-screen behavior */
+@media(max-width:650px){.file-card{padding:10px}.file-actions .file-icon-action{width:40px;height:40px}.file-list{overscroll-behavior:contain}.code-copy{min-width:42px;min-height:42px}}
+@media(max-width:365px){.file-card{padding:8px}.file-actions .file-icon-action{width:35px;height:35px}.hero-heading h1{font-size:29px}}
+
+@media(prefers-reduced-transparency:reduce){.overlay-backdrop,.topbar,.bottom-nav,.send-sheet,.file-sheet,.settings-sheet{backdrop-filter:none;-webkit-backdrop-filter:none}}
+
+/* Motion preference, normal effects ignore system reduced motion. */
+.motion-preference{display:flex;align-items:center;gap:13px;position:relative;cursor:pointer;margin:16px 0 14px;padding:14px 12px;border-radius:17px;border:1px solid #7771e077;background:linear-gradient(120deg,#252b5180,#131b32 88%);box-shadow:inset 0 1px #ffffff24,0 6px 24px #080c2a70;text-align:left}
+.motion-preference-icon{display:grid;place-items:center;width:38px;height:38px;flex:0 0 38px;color:#e6dcff;border-radius:12px;background:linear-gradient(145deg,#6955f1,#332870);box-shadow:0 5px 18px #7354f448;font-size:19px}
+.motion-preference-copy{display:flex;flex:1;min-width:0;flex-direction:column;gap:3px}
+.motion-preference-copy strong{font-size:13px;font-weight:700;color:#f4f3ff}
+.motion-preference-copy small{font-size:11px;line-height:1.45;color:#a6b1d2}
+.motion-preference input{position:absolute;opacity:0;width:1px;height:1px}
+.motion-switch-track{width:46px;height:28px;border-radius:99px;border:1px solid #6b6c91;background:linear-gradient(150deg,#30395a,#1b233f);display:flex;align-items:center;padding:3px;flex:none;box-shadow:inset 0 2px 6px #090e2380;transition:background .24s ease,border-color .24s ease}
+.motion-switch-track>span{width:20px;height:20px;border-radius:50%;background:linear-gradient(150deg,#ebefff,#b9bed6);box-shadow:0 2px 7px #040819a0;transition:transform .3s cubic-bezier(.18,.9,.2,1)}
+.motion-preference input:checked+.motion-switch-track{background:linear-gradient(125deg,#7158f5,#3f39be);border-color:#b3a4ff}
+.motion-preference input:checked+.motion-switch-track>span{transform:translateX(17px);background:white}
+.motion-preference:focus-within{outline:2px solid #bbaaff;outline-offset:3px}
+html[data-motion-mode="light"] .hero-phones,html[data-motion-mode="light"] .hero-glow,html[data-motion-mode="light"] .connection-indicator.live i,html[data-motion-mode="light"] .motion-nav-glider{animation:none!important}
+html[data-motion-mode="light"] .motion-wave{opacity:.2!important}

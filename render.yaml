@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: phonedrop-p2p
+    runtime: node
+    plan: free
+    buildCommand: npm install --omit=dev
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
