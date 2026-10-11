@@ -84,3 +84,28 @@ button:focus-visible,.send-tile:focus-within{outline:2px solid #a99bff;outline-o
 .motion-preference:focus-within{outline:2px solid #bbaaff;outline-offset:3px}
 html[data-motion-mode="light"] .hero-phones,html[data-motion-mode="light"] .hero-glow,html[data-motion-mode="light"] .connection-indicator.live i,html[data-motion-mode="light"] .motion-nav-glider{animation:none!important}
 html[data-motion-mode="light"] .motion-wave{opacity:.2!important}
+
+
+/* PhoneDrop motion 3.1 — stable, compositor-friendly content transitions */
+.view.is-active{view-transition-name:phonedrop-content}
+::view-transition-old(root),::view-transition-new(root){animation-duration:0.01ms}
+::view-transition-group(phonedrop-content){animation-duration:440ms;animation-timing-function:cubic-bezier(.22,.8,.23,1)}
+::view-transition-old(phonedrop-content){animation:pd-view-out 165ms ease-in both}
+::view-transition-new(phonedrop-content){animation:pd-view-in 370ms 75ms cubic-bezier(.18,.85,.25,1) both}
+@keyframes pd-view-out{0%{opacity:1;transform:translateX(0)}100%{opacity:0;transform:translateX(calc(var(--pd-direction,1) * -16px))}}
+@keyframes pd-view-in{0%{opacity:0;transform:translateX(calc(var(--pd-direction,1) * 22px))}100%{opacity:1;transform:translateX(0)}}
+:root[data-screen-direction=back]{--pd-direction:-1}
+:root[data-screen-direction=forward]{--pd-direction:1}
+/* Hero artwork must never lose its translateX(-50%) positioning on tab changes. */
+#viewContainer .hero-phones{animation:none!important;transform:translateX(-50%)!important}
+@media(max-width:650px){
+  .bottom-nav{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,.8fr) 64px minmax(0,1.65fr);align-items:center;gap:0;padding-inline:13px}
+  .bottom-nav .nav-link[data-go=room]{grid-column:1;grid-row:1}
+  .bottom-nav .nav-link[data-go=files]{grid-column:2;grid-row:1}
+  .bottom-nav .nav-send{grid-column:3;grid-row:1;justify-self:center;align-self:center;order:0}
+  .bottom-nav .nav-link[data-go=connect]{grid-column:4;grid-row:1}
+  .view[data-screen=room] .room-dashboard{margin-top:12px!important}
+}
+@media(max-height:700px) and (max-width:650px){
+  .view[data-screen=room] .room-dashboard{margin-top:8px!important}
+}
