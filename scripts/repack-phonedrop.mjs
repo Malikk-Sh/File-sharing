@@ -25,8 +25,9 @@ try{
   const indexPath=path.join(target,'index.html');
   if(!fs.existsSync(path.join(target,'app.js')))throw new Error('Missing live PhoneDrop app');
   let styles=fs.readFileSync(path.join(target,'styles.css'),'utf8');
-  let fxCss=fs.readFileSync(path.join(target,'finishing.css'),'utf8');
-  let js=fs.readFileSync(path.join(target,'finishing.js'),'utf8');
+  // Edited UI sources are canonical. Never restore stale archive copies.
+  let fxCss=fs.readFileSync(path.join(root,'public','finishing.css'),'utf8');
+  let js=fs.readFileSync(path.join(root,'public','finishing.js'),'utf8');
   let html=fs.readFileSync(indexPath,'utf8');
   styles=styles.replace(/@media\(prefers-reduced-motion:reduce\)\{\s*\*,\*::before,\*::after\{animation:none!important;transition:none!important;scroll-behavior:auto!important;translate:none!important\}\s*\}/g,'/* Animation follows PhoneDrop settings. */');
   styles=styles.replace(/@media\(prefers-reduced-motion:no-preference\)\{/g,'@media(min-width:0px){');
